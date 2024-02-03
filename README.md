@@ -18,8 +18,13 @@ Puppeteer is a Node.js library for browser automation via the DevTools Protocol,
 3. Ignore `node_modules` in Git
 4. Run `node index.js`
 
-## Pseudo Todo Code:
+### Pseudo Todo Code:
 - Click all buttons on the current page
 - If no buttons (ended), check for more tabs
 - If more tabs, click and repeat
 - Fetch new loaded buttons until all tabs and buttons end
+
+
+### Todo
+- SFEW pattern: save, find, edit, wipe
+- DIWF pattern: done, info, warn, fail 
