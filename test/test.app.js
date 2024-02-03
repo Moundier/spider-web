@@ -1,36 +1,78 @@
-const puppeteer = require('puppeteer');
+import { launch } from 'puppeteer';
+import { now } from '../src/utils/time.js';
+import { fail, done, info, warn } from '../src/utils/todo.js'
 
-// NOTE: You made me happy, Puppeteer!
 
-(async () => {
-  const browser = await puppeteer.launch();
-  const page = await browser.newPage();
+const URL_TEMPLATE = "https://portal.ufsm.br/projetos/publico/projetos/view.html?idProjeto=%d";
+let onStart;
 
-  const url = 'https://portal.ufsm.br/projetos/publico/projetos/view.html?idProjeto=74584';
-  await page.goto(url);
+const start = () => {
+  onStart = new Date().toLocaleString();
+  console.log('\nSOUP: Program started on', onStart);
+};
 
-  // Wait for the data to be rendered
-  await page.waitForSelector('tbody tr[data-role="tableRow"]');
+const close = () => {
+  console.log('\nProgram finished...', onStart, '\n');
+};
 
-  // Extract data from the first tbody
-  const data = await page.evaluate(() => {
-    const firstTbody = document.querySelector('tbody:first-of-type');
-    const rows = Array.from(firstTbody.querySelectorAll('tr[data-role="tableRow"]'));
+const onClose = (runnable) => {
+  process.on('exit', runnable);
+  process.on('SIGINT', runnable);
+};
 
-    return rows.map(row => {
-      const cells = row.querySelectorAll('td');
+const crawl = async (startId) => {
+  const browser = await launch({ headless: true });
 
-      return {
-        participanteId: cells[1] ? cells[1].textContent.trim() : 'N/A',
-        participanteNome: cells[2] ? cells[2].textContent.trim() : 'N/A',
-        funcao: cells[3] ? cells[3].querySelector('.pill').textContent.trim() : 'N/A',
-        horasSemana: cells[4] ? cells[4].textContent.trim() : 'N/A',
-        dataFinal: cells[5] ? cells[5].querySelector('.dataFinal').textContent.trim() : 'N/A',
-      };
-    });
+  onClose(() => {
+    console.log('Closing browser...');
+    browser.close();
+    close();
   });
 
-  console.log(data);
+  for (let numb = startId; numb > 0; numb--) {
+    console.log('-'.repeat((10 * 10 * 10) / 5));
 
-  await browser.close();
-})();
+    const url = URL_TEMPLATE.replace('%d', numb);
+    const page = await browser.newPage();
+
+    try {
+      const response = await page.goto(url, { waitUntil: 'domcontentloaded' });
+      if (!response.ok()) {
+        console.error(`Failed to load page: ${url}`);
+        continue;
+      }
+
+      console.log('Found PageId:', numb);
+
+      const forbidden = await page.evaluate(() => {
+        const confidential = document.querySelector('.label.pill.error')?.innerText === 'Este é um projeto confidencial';
+        return confidential;
+      });
+
+      if (forbidden) {
+        console.error('Confidential Project:', url);
+        continue;
+      }
+
+      console.log('Visiting URL:', url, ', Title:', await page.title());
+
+      const classification = await page.$eval('div.span6 > span:nth-child(5)', el => el.textContent);
+      const status = await page.$eval('div.span6 > span:nth-child(15)', el => el.textContent);
+
+      console.log(classification);
+      console.log(status);
+
+      // Rest of your code...
+
+    } catch (error) {
+      console.error(error.message);
+    } finally {
+      await page.close();
+    }
+  }
+
+  console.log('Crawling completed.');
+};
+
+start();
+crawl(74584);

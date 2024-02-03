@@ -19,7 +19,7 @@ export function done(message) {
   coloredPrint(color.green, `[DONE] ${message}`);
 }
 
-export function info(message) {
+export function note(message) {
   coloredPrint(color.blue, `[INFO] ${message}`);
 }
 
@@ -30,5 +30,5 @@ export function warn(message) {
 // Example usage
 fail("Something went wrong!");
 done("Task completed successfully.");
-info("This is an informational message.");
+note("This is an informational message.");
 warn("Be cautious, there is a warning.");

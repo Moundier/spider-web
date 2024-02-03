@@ -1,6 +1,6 @@
 import { launch } from 'puppeteer';
 import { now } from './utils/time.js';
-import { fail, done, info, warn } from './utils/todo.js'
+import { fail, done, note, warn } from './utils/todo.js'
 
 async function main() {
   const browser = await launch({
@@ -45,40 +45,42 @@ async function scrape(projectId, browser) {
     let pageCounter = 1;
 
     while (true) {
-      console.log(`Processing page ${pageCounter}`);
-  
+      console.log(`"Processing page ${pageCounter}"`);
+    
+      // Move outside the loop to ensure the page is fully loaded
       await page.waitForSelector('.btn.detalhes');
-      const detalhesButtons = await page.$$('.btn.detalhes');
-  
+    
+      let detalhesButtons = await page.$$('.btn.detalhes');
+    
       for (const button of detalhesButtons) {
         console.log(`Button ${detalhesButtons.indexOf(button)}`);
         await button.click();
       }
-
-      const nextTabsLink = await page.$('a[title="Próxima página"]');
+    
+      const nextTabsLink = await page.$('li a[title="Próxima página"]');
       const linkDisabled = await page.$('.disabled');
-
-      console.log(nextTabsLink, linkDisabled)
-
+    
+      // KEEP: debugging 
+      // console.log(nextTabsLink, linkDisabled);
+    
       if (nextTabsLink == null) {
-        console.log('"Just one tab"');
-        break; // NOTE: Just one tab, break to next url
+        note('"Just one tab, break to the next URL"');
+        break; // NOTE: Just One Tab
       }
-
+    
       if (pageCounter > 1 && linkDisabled) {
-        console.log('"No more tabs"');
-        break; // NOTE: No more tabs, break to next url
+        note('"Break to the next URL"');
+        break; // NOTE: No More Tabs
       }
-
-      // NOTE: current page has next tab
-      if (pageCounter >= 1 && nextTabsLink) { 
-        console.log('"Go to next tab"');
-        await nextTabsLink.click();
+    
+      if (nextTabsLink && pageCounter >= 1 && nextTabsLink) {
+        // NOTE: Go to next 
+        note('"Has next tab"');
+        await page.evaluate(element => element.click(), nextTabsLink); // Use await here
         pageCounter++;
-        // TODO: find a way to get the new buttons
-        await page.reload({ waitUntil: 'domcontentloaded' });
       }
     }
+    
   } catch (error) {
     console.error('\x1b[31m', `Error scraping project ${projectId}: ${error.message}`, '\x1b[0m');
   } finally {
