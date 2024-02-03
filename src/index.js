@@ -45,7 +45,7 @@ async function scrape(projectId, browser) {
     let pageCounter = 1;
 
     while (true) {
-      console.log(`"Processing page ${pageCounter}"`);
+      console.log(`"Processing tab ${pageCounter}"`);
     
       // Move outside the loop to ensure the page is fully loaded
       await page.waitForSelector('.btn.detalhes');
@@ -53,13 +53,20 @@ async function scrape(projectId, browser) {
       let detalhesButtons = await page.$$('.btn.detalhes');
     
       for (const button of detalhesButtons) {
-        console.log(`Button ${detalhesButtons.indexOf(button)}`);
+        console.log(`"Button ${detalhesButtons.indexOf(button)}"`);
         await button.click();
       }
     
       const nextTabsLink = await page.$('li a[title="Próxima página"]');
-      const linkDisabled = await page.$('.disabled');
+      // const linkDisabled = await page.$('.disabled');
+      let linkDisabled;
+      const disabledBtns = await page.$$('.disabled');
     
+
+      if (disabledBtns >= 3) {
+        linkDisabled = disabledBtns[2]; // NOTE: Get third skip button that is disabled
+      }
+
       // KEEP: debugging 
       // console.log(nextTabsLink, linkDisabled);
     
