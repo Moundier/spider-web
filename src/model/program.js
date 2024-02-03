@@ -1,0 +1,19 @@
+export class Program {
+
+}
+
+const Status = {
+  DEFAULT,
+  SUSPENSO,
+  CONCLUIDO_PUBLICADO,
+  CANCELADO,
+  EM_ANDAMENTO
+}
+
+const Classification = {
+  DEFAULT,
+  ENSINO,
+  PESQUISA,
+  EXTENSAO,
+  DESENVOLVIMENTO_INSTITUCIONAL
+}

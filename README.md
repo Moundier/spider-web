@@ -26,5 +26,5 @@ Puppeteer is a Node.js library for browser automation via the DevTools Protocol,
 
 
 ### Todo
-- SFEW pattern: save, find, edit, wipe
-- DIWF pattern: done, info, warn, fail 
+- Implement later on tsc-node
+- Implement udpated fetched buttons 
