@@ -62,7 +62,6 @@ async function scrape(projectId, browser) {
       let linkDisabled;
       const disabledBtns = await page.$$('.disabled');
     
-
       if (disabledBtns >= 3) {
         linkDisabled = disabledBtns[2]; // NOTE: Get third skip button that is disabled
       }
@@ -71,20 +70,19 @@ async function scrape(projectId, browser) {
       // console.log(nextTabsLink, linkDisabled);
     
       if (nextTabsLink == null) {
-        note('"Just one tab, break to the next URL"');
+        warn('"Just one tab, break to the next URL"');
         break; // NOTE: Just One Tab
       }
     
       if (pageCounter > 1 && linkDisabled) {
-        note('"Break to the next URL"');
+        warn('"Break to the next URL"');
         break; // NOTE: No More Tabs
       }
     
       if (nextTabsLink && pageCounter >= 1 && nextTabsLink) {
-        // NOTE: Go to next 
         note('"Has next tab"');
         await page.evaluate(element => element.click(), nextTabsLink); // Use await here
-        pageCounter++;
+        pageCounter++;  // NOTE: Go to next 
       }
     }
     

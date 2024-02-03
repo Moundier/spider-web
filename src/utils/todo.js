@@ -20,7 +20,7 @@ export function done(message) {
 }
 
 export function note(message) {
-  coloredPrint(color.blue, `[INFO] ${message}`);
+  coloredPrint(color.blue, `[NOTE] ${message}`);
 }
 
 export function warn(message) {
