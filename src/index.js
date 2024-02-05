@@ -66,7 +66,7 @@ async function scrape(projectId, browser) {
           console.log('Fail (Open): ' + error.message);
         }
 
-        await page.waitForTimeout(500);
+        await page.waitForTimeout(2000);
 
         await page.waitForSelector('.close');
         let closeButtons = await page.$$('.close');
@@ -78,7 +78,7 @@ async function scrape(projectId, browser) {
           await lastCloseButton.click(); // TODO: Modal closes
           // await page.waitForTimeout(1000);
         } catch (error) {
-          throw new Error('Button (Close): ' + error.message);
+          fail('Button (Close): ' + error.message);
         }
       }
 
@@ -129,6 +129,14 @@ function spliter(string) {
   return value;
 };
 
+function attrs(string) {
+  const parts = string.split(':');
+  const value = parts[0].trim();
+  return value;
+};
+
+let globalSet = new Set();
+
 async function extractModal(page) {
   await page.waitForSelector('.modaljs-scroll-overlay');
   const deadModals = await page.$$('.modaljs-scroll-overlay');
@@ -140,11 +148,19 @@ async function extractModal(page) {
     // TODO: tem uma quantidade de p tags
     const paragraphs = await modal.$$('div.modaljs-scroll-overlay p');
 
-    for (const p of paragraphs) {
-      const text = await p.evaluate(node => node.innerText); // use await here
-      console.log(text);
+    for (let i = 0; i < paragraphs.length; i++) {
+      const p = paragraphs[i];
+      const text = await p.evaluate(node => node.innerText);
+    
+      // Add to set if not the first element
+      if (i > 0) {
+        globalSet.add(attrs(text));
+      }
     }
 
+
+    console.log(globalSet)
+    
     const name = await modal.$eval('div.modaljs-scroll-overlay p strong:nth-child(1)', strong => strong.innerText);
 
     const matricula = await modal.$eval('div.modaljs-scroll-overlay p:nth-child(2)', strong => strong.innerText); // TODO: implement spliter
