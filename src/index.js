@@ -4,7 +4,7 @@ import { fail, done, note, warn } from './utils/todo.js'
 
 async function main() {
   const browser = await launch({
-    headless: true,
+    headless: false,
   });
 
   for (let projectId = 74584; projectId >= 0; projectId--) {
@@ -66,22 +66,28 @@ async function scrape(projectId, browser) {
           console.log('Fail (Open): ' + error.message);
         }
 
-        await page.waitForTimeout(2000); // WARNING: 
-
-        await page.waitForSelector('.close');
-        let closeButtons = await page.$$('.close');
-
-        const lastIndex = (closeButtons.length - 1);
-        const lastCloseButton = closeButtons[lastIndex]
 
         try {
-          await lastCloseButton.click(); // TODO: Modal closes
-          // await page.waitForTimeout(1000);
+          let closeButtons = null;
+          let lastCloseButton = null;
+
+
+          // NOTE: While Button Couldnt Be Loaded to Be Clickabe
+          while (lastCloseButton === null || lastCloseButton === undefined || !(await lastCloseButton.isIntersectingViewport())) {
+            await page.waitForSelector('.close');
+            closeButtons = await page.$$('.close');
+            const lastIndex = closeButtons.length - 1;
+            lastCloseButton = closeButtons[lastIndex];
+
+            // await page.waitForTimeout(500);  
+          }
+        
+          await lastCloseButton.click();
         } catch (error) {
           fail('Button (Close): ' + error.message);
         }
-      }
 
+      }
       // STEP: Goes to Next Page of Members
 
       const nextTabsLink = await page.$('li a[title="Próxima página"]');
@@ -135,7 +141,7 @@ function attrs(string) {
   return value;
 };
 
-let globalSet = new Set();
+let globalInspectAttributes = new Set();
 
 async function extractModal(page) {
   await page.waitForSelector('.modaljs-scroll-overlay');
@@ -154,12 +160,11 @@ async function extractModal(page) {
     
       // Add to set if not the first element
       if (i > 0) {
-        globalSet.add(attrs(text));
+        globalInspectAttributes.add(attrs(text));
       }
     }
 
-
-    console.log(globalSet)
+    console.log(globalInspectAttributes)
     
     const name = await modal.$eval('div.modaljs-scroll-overlay p strong:nth-child(1)', strong => strong.innerText);
 
@@ -183,4 +188,3 @@ async function extractModal(page) {
 }
 
 main();
-
