@@ -42,55 +42,129 @@ async function scrape(projectId, browser) {
       done(`${now()} - Project ID: ${projectId} - Page Title: ${projectName} - Project URL: ${projectUrl}`);
     }
 
-    let pageCounter = 1;
+    let tabPointer = 1;
 
     while (true) {
-      console.log(`"Processing tab ${pageCounter}"`);
-    
-      // Move outside the loop to ensure the page is fully loaded
+
+      // TODO: Click See more Button and Click Close Button
+
+      console.log(`"Processing tab ${tabPointer}"`);
+
       await page.waitForSelector('.btn.detalhes');
-    
+
       let detalhesButtons = await page.$$('.btn.detalhes');
-    
+
       for (const button of detalhesButtons) {
+
+        await page.waitForTimeout(1000);
+
         console.log(`"Button ${detalhesButtons.indexOf(button)}"`);
-        await button.click();
-      }
-    
-      const nextTabsLink = await page.$('li a[title="Próxima página"]');
-      // const linkDisabled = await page.$('.disabled');
-      let linkDisabled;
-      const disabledBtns = await page.$$('.disabled');
-    
-      if (disabledBtns >= 3) {
-        linkDisabled = disabledBtns[2]; // NOTE: Get third skip button that is disabled
+
+        try {
+          await button.click(); // NOTE: Modal opens
+        } catch (error) {
+          console.log('Fail (Open): ' + error.message);
+        }
+
+        await page.waitForTimeout(500);
+
+        await page.waitForSelector('.close');
+        let closeButtons = await page.$$('.close');
+
+        const lastIndex = (closeButtons.length - 1);
+        const lastCloseButton = closeButtons[lastIndex]
+
+        try {
+          await lastCloseButton.click(); // TODO: Modal closes
+          // await page.waitForTimeout(1000);
+        } catch (error) {
+          throw new Error('Button (Close): ' + error.message);
+        }
       }
 
-      // KEEP: debugging 
-      // console.log(nextTabsLink, linkDisabled);
-    
+      // STEP: Goes to Next Page of Members
+
+      const nextTabsLink = await page.$('li a[title="Próxima página"]');
+      let linkDisabled;
+      const disabledBtns = await page.$$('.disabled');
+
+      if (disabledBtns >= 3) {
+        linkDisabled = disabledBtns[2]; // NOTE: Get the third disabled skip button.  
+      }
+
+      console.log(nextTabsLink, linkDisabled);
+
+      await extractModal(page);
+
+      // NOTE: There are no more pages to process. Found just one page.
       if (nextTabsLink == null) {
         warn('"Just one tab, break to the next URL"');
-        break; // NOTE: Just One Tab
+        break;
       }
-    
-      if (pageCounter > 1 && linkDisabled) {
+
+      // NOTE: There are no more pages to process. 
+      if (tabPointer > 1 && linkDisabled) {
         warn('"Break to the next URL"');
-        break; // NOTE: No More Tabs
+        break;
       }
-    
-      if (nextTabsLink && pageCounter >= 1 && nextTabsLink) {
+
+      // NOTE: There are no more pages to process. Go to the next page.
+      if (nextTabsLink && tabPointer >= 1 && nextTabsLink) {
         note('"Has next tab"');
         await page.evaluate(element => element.click(), nextTabsLink); // Use await here
-        pageCounter++;  // NOTE: Go to next 
+        tabPointer++;
       }
     }
-    
+
   } catch (error) {
-    console.error('\x1b[31m', `Error scraping project ${projectId}: ${error.message}`, '\x1b[0m');
+    fail(`Error scraping project ${projectId}: ${error.message}`);
   } finally {
     await page.close();
   }
 }
 
+function spliter(string) {
+  const parts = string.split(':');
+  const value = parts[1].trim();
+  return value;
+};
+
+async function extractModal(page) {
+  await page.waitForSelector('.modaljs-scroll-overlay');
+  const deadModals = await page.$$('.modaljs-scroll-overlay');
+
+  console.log('Number of modals: ' + deadModals.length);
+
+  for (const modal of deadModals) {
+
+    // TODO: tem uma quantidade de p tags
+    const paragraphs = await modal.$$('div.modaljs-scroll-overlay p');
+
+    for (const p of paragraphs) {
+      const text = await p.evaluate(node => node.innerText); // use await here
+      console.log(text);
+    }
+
+    const name = await modal.$eval('div.modaljs-scroll-overlay p strong:nth-child(1)', strong => strong.innerText);
+
+    const matricula = await modal.$eval('div.modaljs-scroll-overlay p:nth-child(2)', strong => strong.innerText); // TODO: implement spliter
+    const vinculo = await modal.$eval('div.modaljs-scroll-overlay p:nth-child(3)', strong => strong.innerText);
+
+    const situacao = await modal.$eval('div.modaljs-scroll-overlay p:nth-child(4)', strong => strong.innerText); // MAKE IT HERE  
+    const email = await modal.$eval('div.modaljs-scroll-overlay p:nth-child(5)', strong => strong.innerText); // MAKE IT HERE  
+    const curso = await modal.$eval('div.modaljs-scroll-overlay p:nth-child(6)', strong => strong.innerText); // MAKE IT HERE  
+    const funcao = await modal.$eval('div.modaljs-scroll-overlay p:nth-child(7)', strong => strong.innerText); // MAKE IT HERE 
+    const cargaHoraria = await modal.$eval('div.modaljs-scroll-overlay p:nth-child(8)', strong => strong.innerText); // MAKE IT HERE 
+    const periodo = await modal.$eval('div.modaljs-scroll-overlay p:nth-child(9)', strong => strong.innerText); // MAKE IT HERE  
+    const recebeBolsa = await modal.$eval('div.modaljs-scroll-overlay p:nth-child(10)', strong => strong.innerText); // MAKE IT HERE 
+
+    const data = { name, matricula , vinculo , situacao , email , curso , funcao , cargaHoraria, periodo, recebeBolsa };
+    data.matricula = spliter(data.matricula);
+    data.vinculo = spliter(data.vinculo);
+
+    console.log(data);
+  }
+}
+
 main();
+

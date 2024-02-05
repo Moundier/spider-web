@@ -7,24 +7,24 @@ const color = {
   blue: "\x1b[34m",
 };
 
-export function coloredPrint(colorCode, message) {
+export function colorize(colorCode, message) {
   console.log(colorCode + message + color.reset);
 }
 
 export function fail(message) {
-  coloredPrint(color.red, `[FAIL] ${message}`);
+  colorize(color.red, `[FAIL] ${message}`);
 }
 
 export function done(message) {
-  coloredPrint(color.green, `[DONE] ${message}`);
+  colorize(color.green, `[DONE] ${message}`);
 }
 
 export function note(message) {
-  coloredPrint(color.blue, `[NOTE] ${message}`);
+  colorize(color.blue, `[NOTE] ${message}`);
 }
 
 export function warn(message) {
-  coloredPrint(color.yellow, `[WARN] ${message}`);
+  colorize(color.yellow, `[WARN] ${message}`);
 }
 
 // Example usage
