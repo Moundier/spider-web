@@ -21,12 +21,13 @@ Puppeteer is a Node.js library for browser automation via the DevTools Protocol,
 4. Run `node index.js`
 
 ### Pseudo Todo Code:
-- Click all buttons on the current page
-- If no buttons (ended), check for more tabs
-- If more tabs, click and repeat
-- Fetch new loaded buttons until all tabs and buttons end
+- (...)
 
+### Notes
+- Implement Better timeout on close button
 
-### Todo
+- HIGH_PRIORITY: Some close buttons take time to load
+- HIGH_PRIORITY: This one takes time to load: https://portal.ufsm.br/projetos/publico/projetos/view.html?idProjeto=74535
+
 - Implement later on tsc-node
 - Implement udpated fetched buttons 

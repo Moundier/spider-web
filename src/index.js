@@ -46,7 +46,7 @@ async function scrape(projectId, browser) {
 
     while (true) {
 
-      // TODO: Click See more Button and Click Close Button
+      // TODO: Click (See more Button) and Click (Close Button)
 
       console.log(`"Processing tab ${tabPointer}"`);
 
@@ -66,7 +66,7 @@ async function scrape(projectId, browser) {
           console.log('Fail (Open): ' + error.message);
         }
 
-        await page.waitForTimeout(2000);
+        await page.waitForTimeout(2000); // WARNING: 
 
         await page.waitForSelector('.close');
         let closeButtons = await page.$$('.close');
