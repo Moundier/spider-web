@@ -122,7 +122,7 @@ async function scrape(projectId, browser) {
 
       for (const button of detalhesButtons) {
 
-        await page.waitForTimeout(1000);
+        await page.waitForTimeout(600);
         console.log(`"Button ${detalhesButtons.indexOf(button)}"`);
 
         try {
