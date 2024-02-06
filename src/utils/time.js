@@ -9,7 +9,6 @@ export function now() {
   return new Intl.DateTimeFormat('en-US', options).format(new Date());
 }
 
-
 // Example Usage
 console.log(now());
 

@@ -6,7 +6,12 @@ Puppeteer is a Node.js library for browser automation via the DevTools Protocol,
 - Headless browser automation
 - User interaction simulation
 - Screenshot capture and PDF generation
-- Effective handling of dynamic content and AJAX requests
+- Effective handling of dynamic content and AJAX request
+- Thymeleaf
+
+## Staged
+- to go: compromise
+- to go: playwright
 
 ## Requirements
 - Basic computer
@@ -31,7 +36,7 @@ Puppeteer is a Node.js library for browser automation via the DevTools Protocol,
 - to do: inspect possible member functions
 - to do: inspect possible program classification
 
-```md
+Participantes Atributos
 - 'Matrícula',
 - 'Vínculo',
 - 'Situação do vínculo',
@@ -43,7 +48,25 @@ Puppeteer is a Node.js library for browser automation via the DevTools Protocol,
 - 'Período',
 - 'Recebe bolsa pelo projeto',
 - 'Curso'
-```
+
+Paineis de dados
+- 'Dados Básicos',
+- 'Inovação e gestão financeira',
+- 'Classificações',
+- 'Participantes',
+- 'Órgãos',
+- 'Cidades de atuação',
+- 'Público alvo',
+- 'Plano de Trabalho'
+
+Programa Classificacao
+- 
+
+
 - to do : stopped in idProjeto=74155
 - to do: Implement later on tsc-node
 - to do: Implement udpated fetched buttons 
+
+- to do: in total, 11 attributes
+- to do: missing attributes (idProjeto=74582)
+- to do: extra attributes (idProjeto=74580)

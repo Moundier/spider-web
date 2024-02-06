@@ -17,6 +17,11 @@ async function main() {
 
 const baseUrl = 'https://portal.ufsm.br/projetos/publico/projetos/view.html?idProjeto=';
 
+let programPanelDataInspector = new Set(); // Dados Basicos, Inovacao e gesto financeira, Classificacoes, Participantes, Orgaos, Cidades de atuacao, Publico Alvo, Plano de Trabalho
+let programClassificInspector = new Set(); // ENSINO, PESQUISA, EXTENSAO, DESENVOLVIMENTO_INSTITUCIOAL,
+let programSituationInspector = new Set(); // SUSPENSO, CONCLUIDO_PUBLICADO, CANCELADO, EM_ANDAMENTO  
+let memeberAttributesInspector = new Set(); // MATRÍCULA, VÍNCULO, SITUAÇÃO DO VÍNCULO, E-MAIL, LOTAÇÃO DE EXERCÍCIO, LOTAÇÃO OFICIAL, FUNÇÃO NO PROJETO, CARGA HORÁRIA, PERÍODO, RECEBE BOLSA PELO PROJETO, CURSO
+
 async function scrape(projectId, browser) {
   const page = await browser.newPage();
 
@@ -43,26 +48,37 @@ async function scrape(projectId, browser) {
       done(`${now()} - Project ID: ${projectId} - Page Title: ${projectName} - Project URL: ${projectUrl}`);
     }
 
-    // TODO: program find
+    // TODO: get panel titles
+    const panelTitles = await page.$$eval('.panel-title', titles => titles.map(title => title.textContent.trim()));
+  
+    for (const title of panelTitles) {
+      programPanelDataInspector.add(title);
+    }
+
+    // TODO: get program
 
     let programId = null;
     let hyperlinkImage = null;
     let title = await page.$$eval('div.span12 > span', title => title[1].innerText);
     let numberUnique = await page.$$eval('div.span6 > span', title => title[1].innerText); 
     let classification = await page.$$eval('div.span6 > span', title => title[4].innerText);
-    
     let summary = await page.$$eval('div.span12 > span', title => title[3].innerText); 
     let objectives = await page.$$eval('div.span12 > span', title => title[5].innerText); 
     let defense = await page.$$eval('div.span12 > span', title => title[7].innerText);  
     let results = await page.$$eval('div.span12 > span', title => title[9].innerText); 
-
     let dateStart =await page.$$eval('div.span3 > span', title => title[1].innerText);
     let dateFinal =await page.$$eval('div.span3 > span', title => title[3].innerText);
     let publicationDate = null;
     let completionDate = null;
-    
+
     let status = await page.$$eval('div.span6 > span', title => title[14].innerText);
     let keywords = null;
+
+    // TODO: Set of Status
+    programClassificInspector.add(classification);
+
+    // TODO: Set of Classifications
+    programSituationInspector.add(status);
 
     let program = new Program(
       null,
@@ -89,56 +105,53 @@ async function scrape(projectId, browser) {
     program.defense = program.defense.substring(0, 50);
     program.results = program.results.substring(0, 50);
     
-    console.log(program)
+    // TODO: program
+    // console.log(program); 
+    console.log(programPanelDataInspector);
+    console.log(programClassificInspector);
+    console.log(programSituationInspector);
+    console.log(memeberAttributesInspector);
 
     let tabPointer = 1;
 
     while (true) {
 
       console.log(`"Processing tab ${tabPointer}"`);
-
       await page.waitForSelector('.btn.detalhes');
-
       let detalhesButtons = await page.$$('.btn.detalhes');
 
       for (const button of detalhesButtons) {
 
         await page.waitForTimeout(1000);
-
         console.log(`"Button ${detalhesButtons.indexOf(button)}"`);
 
         try {
-          await button.click(); // NOTE: Modal opens
+          await button.click(); // NOTE: Open the modal
         } catch (error) {
-          console.log('Fail (Open): ' + error.message);
+          fail('Failure on modal open: ' + error.message);
         }
-
 
         try {
           let closeButtons = null;
           let lastCloseButton = null;
 
-
-          // NOTE: While Button Couldnt Be Loaded to Be Clickabe
           while (lastCloseButton === null || lastCloseButton === undefined || !(await lastCloseButton.isIntersectingViewport())) {
             await page.waitForSelector('.close');
             closeButtons = await page.$$('.close');
             const lastIndex = closeButtons.length - 1;
             lastCloseButton = closeButtons[lastIndex];
-
-            // await page.waitForTimeout(500);  
           }
         
           await lastCloseButton.click();
+
         } catch (error) {
           fail('Button (Close): ' + error.message);
         }
-
       }
-      // STEP: Goes to Next Page of Members
 
-      const nextTabsLink = await page.$('li a[title="Próxima página"]');
+      // STEP: Goes to Next Page of Members
       let linkDisabled;
+      const nextTabsLink = await page.$('li a[title="Próxima página"]');
       const disabledBtns = await page.$$('.disabled');
 
       if (disabledBtns >= 3) {
@@ -149,19 +162,19 @@ async function scrape(projectId, browser) {
 
       await extractModal(page);
 
-      // NOTE: There are no more pages to process. Found just one page.
+      // NOTE: Found one tab. Break to the next. (nextNotFound)
       if (nextTabsLink == null) {
-        warn('"Just one tab, break to the next URL"');
+        warn('"Just one tab, break to the next URL"'); 
         break;
       }
-
-      // NOTE: There are no more pages to process. 
+      
+      // NOTE: No more tabs. Break to the next; (currentIsLast)
       if (tabPointer > 1 && linkDisabled) {
-        warn('"Break to the next URL"');
+        warn('"Break to the next URL"'); 
         break;
       }
 
-      // NOTE: There are no more pages to process. Go to the next page.
+      // NOTE: Found more Tabs. Iterate! (goToNextTab)
       if (nextTabsLink && tabPointer >= 1 && nextTabsLink) {
         note('"Has next tab"');
         await page.evaluate(element => element.click(), nextTabsLink); // Use await here
@@ -188,9 +201,8 @@ function attrs(string) {
   return value;
 };
 
-let memeberAttributesInspector = new Set();
-
 async function extractModal(page) {
+
   await page.waitForSelector('.modaljs-scroll-overlay');
   const deadModals = await page.$$('.modaljs-scroll-overlay');
 
@@ -198,42 +210,41 @@ async function extractModal(page) {
 
   for (const modal of deadModals) {
 
-    // TODO: tem uma quantidade de p tags
+    // for (const f of FieldsToExtract) {
+    //   console.log(f)
+    // }
+
     const paragraphs = await modal.$$('div.modaljs-scroll-overlay p');
 
-    for (let i = 0; i < paragraphs.length; i++) {
-      const p = paragraphs[i];
-      const text = await p.evaluate(node => node.innerText);
-    
-      // TODO: Add to set if not the first element
-      if (i > 0) {
-        memeberAttributesInspector.add(attrs(text));
+    console.log('-'.repeat(100))
+    for (const p of paragraphs) {
+      const text = await p.evaluate(element => element.innerText);
+      const key = text.split(':')[0];
+      const val = text.split(':')[1];
+
+      if (paragraphs.indexOf(p) > 0) {
+        memeberAttributesInspector.add(attrs(text)); // TODO: Add to set
+        console.log(`index: ${paragraphs.indexOf(p)} key: ${key}, val: ${val}`);  // TODO: set value to corresponding key
       }
     }
 
-    
-    const name = await modal.$eval('div.modaljs-scroll-overlay p strong:nth-child(1)', strong => strong.innerText);
+    // const name = await modal.$eval('div.modaljs-scroll-overlay p strong:nth-child(1)', strong => strong.innerText);
+    // const matricula = await modal.$eval('div.modaljs-scroll-overlay p:nth-child(2)', strong => strong.innerText); // TODO: implement spliter
+    // const vinculo = await modal.$eval('div.modaljs-scroll-overlay p:nth-child(3)', strong => strong.innerText);
+    // const situacao = await modal.$eval('div.modaljs-scroll-overlay p:nth-child(4)', strong => strong.innerText); // MAKE IT HERE  
+    // const email = await modal.$eval('div.modaljs-scroll-overlay p:nth-child(5)', strong => strong.innerText); // MAKE IT HERE  
+    // const curso = await modal.$eval('div.modaljs-scroll-overlay p:nth-child(6)', strong => strong.innerText); // MAKE IT HERE  
+    // const funcao = await modal.$eval('div.modaljs-scroll-overlay p:nth-child(7)', strong => strong.innerText); // MAKE IT HERE 
+    // const cargaHoraria = await modal.$eval('div.modaljs-scroll-overlay p:nth-child(8)', strong => strong.innerText); // MAKE IT HERE 
+    // const periodo = await modal.$eval('div.modaljs-scroll-overlay p:nth-child(9)', strong => strong.innerText); // MAKE IT HERE  
+    // const recebeBolsa = await modal.$eval('div.modaljs-scroll-overlay p:nth-child(10)', strong => strong.innerText); // MAKE IT HERE 
 
-    const matricula = await modal.$eval('div.modaljs-scroll-overlay p:nth-child(2)', strong => strong.innerText); // TODO: implement spliter
-    const vinculo = await modal.$eval('div.modaljs-scroll-overlay p:nth-child(3)', strong => strong.innerText);
+    // const data = { name, matricula , vinculo , situacao , email , curso , funcao , cargaHoraria, periodo, recebeBolsa };
+    // data.matricula = spliter(data.matricula);
+    // data.vinculo = spliter(data.vinculo);
 
-    const situacao = await modal.$eval('div.modaljs-scroll-overlay p:nth-child(4)', strong => strong.innerText); // MAKE IT HERE  
-    const email = await modal.$eval('div.modaljs-scroll-overlay p:nth-child(5)', strong => strong.innerText); // MAKE IT HERE  
-    const curso = await modal.$eval('div.modaljs-scroll-overlay p:nth-child(6)', strong => strong.innerText); // MAKE IT HERE  
-    const funcao = await modal.$eval('div.modaljs-scroll-overlay p:nth-child(7)', strong => strong.innerText); // MAKE IT HERE 
-    const cargaHoraria = await modal.$eval('div.modaljs-scroll-overlay p:nth-child(8)', strong => strong.innerText); // MAKE IT HERE 
-    const periodo = await modal.$eval('div.modaljs-scroll-overlay p:nth-child(9)', strong => strong.innerText); // MAKE IT HERE  
-    const recebeBolsa = await modal.$eval('div.modaljs-scroll-overlay p:nth-child(10)', strong => strong.innerText); // MAKE IT HERE 
-
-    const data = { name, matricula , vinculo , situacao , email , curso , funcao , cargaHoraria, periodo, recebeBolsa };
-    data.matricula = spliter(data.matricula);
-    data.vinculo = spliter(data.vinculo);
-
-    console.log(data);
+    // console.log(data);
   }
-
-  // TODO: Inpect Member Attributes
-  console.log(memeberAttributesInspector)
 }
 
 main();
