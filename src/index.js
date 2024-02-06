@@ -20,7 +20,8 @@ const baseUrl = 'https://portal.ufsm.br/projetos/publico/projetos/view.html?idPr
 let programPanelDataInspector = new Set(); // Dados Basicos, Inovacao e gesto financeira, Classificacoes, Participantes, Orgaos, Cidades de atuacao, Publico Alvo, Plano de Trabalho
 let programClassificInspector = new Set(); // ENSINO, PESQUISA, EXTENSAO, DESENVOLVIMENTO_INSTITUCIOAL,
 let programSituationInspector = new Set(); // SUSPENSO, CONCLUIDO_PUBLICADO, CANCELADO, EM_ANDAMENTO  
-let memeberAttributesInspector = new Set(); // MATRÍCULA, VÍNCULO, SITUAÇÃO DO VÍNCULO, E-MAIL, LOTAÇÃO DE EXERCÍCIO, LOTAÇÃO OFICIAL, FUNÇÃO NO PROJETO, CARGA HORÁRIA, PERÍODO, RECEBE BOLSA PELO PROJETO, CURSO
+let memberAttributesInspector = new Set(); // MATRÍCULA, VÍNCULO, SITUAÇÃO DO VÍNCULO, E-MAIL, LOTAÇÃO DE EXERCÍCIO, LOTAÇÃO OFICIAL, FUNÇÃO NO PROJETO, CARGA HORÁRIA, PERÍODO, RECEBE BOLSA PELO PROJETO, CURSO
+let memberAcademicRole = new Set(); //  Coordenador, Participante, Autor 
 
 async function scrape(projectId, browser) {
   const page = await browser.newPage();
@@ -80,6 +81,7 @@ async function scrape(projectId, browser) {
     // TODO: Set of Classifications
     programSituationInspector.add(status);
 
+    // TODO: Program
     let program = new Program(
       null,
       null,
@@ -107,10 +109,12 @@ async function scrape(projectId, browser) {
     
     // TODO: program
     // console.log(program); 
+    console.log();
     console.log(programPanelDataInspector);
     console.log(programClassificInspector);
     console.log(programSituationInspector);
-    console.log(memeberAttributesInspector);
+    console.log(memberAttributesInspector);
+    console.log(memberAcademicRoler);
 
     let tabPointer = 1;
 
@@ -223,7 +227,7 @@ async function extractModal(page) {
       const val = text.split(':')[1];
 
       if (paragraphs.indexOf(p) > 0) {
-        memeberAttributesInspector.add(attrs(text)); // TODO: Add to set
+        memberAttributesInspector.add(attrs(text)); // TODO: Add to set
         console.log(`index: ${paragraphs.indexOf(p)} key: ${key}, val: ${val}`);  // TODO: set value to corresponding key
       }
     }
