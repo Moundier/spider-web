@@ -25,8 +25,25 @@ Puppeteer is a Node.js library for browser automation via the DevTools Protocol,
 - (...)
 
 ### Todo
-- to do: (High Priority) Some close buttons take time to load (High)
-- to do: (High Priority) This one takes time to load: https://portal.ufsm.br/projetos/publico/projetos/view.html?idProjeto=74535
+- to do: button asynchronous open timeout
+- to do: inspect possible member attributes
+- to do: inspect possible breadcrumbs titles
+- to do: inspect possible member functions
+- to do: inspect possible program classification
 
+```md
+- 'Matrícula',
+- 'Vínculo',
+- 'Situação do vínculo',
+- 'E-mail',
+- 'Lotação de Exercício',
+- 'Lotação Oficial',
+- 'Função no projeto',
+- 'Carga horária',
+- 'Período',
+- 'Recebe bolsa pelo projeto',
+- 'Curso'
+```
+- to do : stopped in idProjeto=74155
 - to do: Implement later on tsc-node
 - to do: Implement udpated fetched buttons 

@@ -1,6 +1,7 @@
 import { launch } from 'puppeteer';
 import { now } from './utils/time.js';
-import { fail, done, note, warn } from './utils/todo.js'
+import { fail, done, note, warn } from './utils/todo.js';
+import { Program } from './model/program.js';
 
 async function main() {
   const browser = await launch({
@@ -42,11 +43,57 @@ async function scrape(projectId, browser) {
       done(`${now()} - Project ID: ${projectId} - Page Title: ${projectName} - Project URL: ${projectUrl}`);
     }
 
+    // TODO: program find
+
+    let programId = null;
+    let hyperlinkImage = null;
+    let title = await page.$$eval('div.span12 > span', title => title[1].innerText);
+    let numberUnique = await page.$$eval('div.span6 > span', title => title[1].innerText); 
+    let classification = await page.$$eval('div.span6 > span', title => title[4].innerText);
+    
+    let summary = await page.$$eval('div.span12 > span', title => title[3].innerText); 
+    let objectives = await page.$$eval('div.span12 > span', title => title[5].innerText); 
+    let defense = await page.$$eval('div.span12 > span', title => title[7].innerText);  
+    let results = await page.$$eval('div.span12 > span', title => title[9].innerText); 
+
+    let dateStart =await page.$$eval('div.span3 > span', title => title[1].innerText);
+    let dateFinal =await page.$$eval('div.span3 > span', title => title[3].innerText);
+    let publicationDate = null;
+    let completionDate = null;
+    
+    let status = await page.$$eval('div.span6 > span', title => title[14].innerText);
+    let keywords = null;
+
+    let program = new Program(
+      null,
+      null,
+      title,
+      numberUnique,
+      classification,
+      summary,
+      objectives,
+      defense,
+      results,
+      dateStart,
+      dateFinal,
+      publicationDate,
+      completionDate,
+      status,
+      keywords
+    );
+    
+    // NOTE: Output reduced for better visualization
+    program.title = program.title.substring(0, 50);
+    program.summary = program.summary.substring(0, 50);
+    program.objectives = program.objectives.substring(0, 50);
+    program.defense = program.defense.substring(0, 50);
+    program.results = program.results.substring(0, 50);
+    
+    console.log(program)
+
     let tabPointer = 1;
 
     while (true) {
-
-      // TODO: Click (See more Button) and Click (Close Button)
 
       console.log(`"Processing tab ${tabPointer}"`);
 
@@ -141,7 +188,7 @@ function attrs(string) {
   return value;
 };
 
-let globalInspectAttributes = new Set();
+let memeberAttributesInspector = new Set();
 
 async function extractModal(page) {
   await page.waitForSelector('.modaljs-scroll-overlay');
@@ -158,13 +205,12 @@ async function extractModal(page) {
       const p = paragraphs[i];
       const text = await p.evaluate(node => node.innerText);
     
-      // Add to set if not the first element
+      // TODO: Add to set if not the first element
       if (i > 0) {
-        globalInspectAttributes.add(attrs(text));
+        memeberAttributesInspector.add(attrs(text));
       }
     }
 
-    console.log(globalInspectAttributes)
     
     const name = await modal.$eval('div.modaljs-scroll-overlay p strong:nth-child(1)', strong => strong.innerText);
 
@@ -185,6 +231,9 @@ async function extractModal(page) {
 
     console.log(data);
   }
+
+  // TODO: Inpect Member Attributes
+  console.log(memeberAttributesInspector)
 }
 
 main();
