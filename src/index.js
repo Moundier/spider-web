@@ -231,7 +231,7 @@ async function extractModal(page) {
         console.log(`index: ${paragraphs.indexOf(p)} key: ${key}, val: ${val}`);  // TODO: set value to corresponding key
 
         if (key === 'Função no projeto') {
-          memberAcademicRole.add(key);
+          memberAcademicRole.add(val);
         }
       }
     }
