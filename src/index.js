@@ -5,7 +5,7 @@ import { Program } from './model/program.js';
 
 async function main() {
   const browser = await launch({
-    headless: false,
+    headless: true,
   });
 
   for (let projectId = 74584; projectId >= 0; projectId--) {

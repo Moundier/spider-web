@@ -70,3 +70,65 @@ Programa Classificacao
 - to do: in total, 11 attributes
 - to do: missing attributes (idProjeto=74582)
 - to do: extra attributes (idProjeto=74580)
+
+[DONE] Feb 7, 2024, 19:18:25 - Project ID: 70119 - Page Title: Portal de Projetos - Visualizar projeto - Project URL: https://portal.ufsm.br/projetos/publico/projetos/view.html?idProjeto=70119
+
+Set(8) {
+  'Dados Básicos',
+  'Inovação e gestão financeira',
+  'Classificações',
+  'Participantes',
+  'Órgãos',
+  'Cidades de atuação',
+  'Público alvo',
+  'Plano de Trabalho'
+}
+Set(4) {
+  'Extensão',
+  'Pesquisa',
+  'Ensino',
+  'Desenvolvimento Institucional'
+}
+Set(4) {
+  'Em andamento',
+  'Cancelado',
+  'Concluído/Publicado',
+  'Suspenso'
+}
+Set(13) {
+  'Matrícula',
+  'Vínculo',
+  'Situação do vínculo',
+  'E-mail',
+  'Lotação de Exercício',
+  'Lotação Oficial',
+  'Função no projeto',
+  'Carga horária',
+  'Período',
+  'Recebe bolsa pelo projeto',
+  'Curso',
+  'Bolsa',
+  'Valor'
+}
+Set(20) {
+  ' Instrutor (curso)',
+  ' Coordenador',
+  ' Participante',
+  ' Co-orientador',
+  ' Bolsista',
+  ' Colaborador',
+  ' Orientador',
+  ' Pesquisador',
+  ' Autor',
+  ' Co-autor',
+  ' Executor',
+  ' Professor (curso)',
+  ' Palestrante',
+  ' Monitor',
+  ' Estagiário',
+  ' Apresentador',
+  ' Tutor (curso)',
+  ' Coordenador administrativo',
+  ' Responsável Técnico',
+  ' Acompanhante'
+}
