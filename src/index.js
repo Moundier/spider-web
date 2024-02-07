@@ -114,7 +114,7 @@ async function scrape(projectId, browser) {
     console.log(programClassificInspector);
     console.log(programSituationInspector);
     console.log(memberAttributesInspector);
-    console.log(memberAcademicRoler);
+    console.log(memberAcademicRole);
 
     let tabPointer = 1;
 
@@ -229,6 +229,10 @@ async function extractModal(page) {
       if (paragraphs.indexOf(p) > 0) {
         memberAttributesInspector.add(attrs(text)); // TODO: Add to set
         console.log(`index: ${paragraphs.indexOf(p)} key: ${key}, val: ${val}`);  // TODO: set value to corresponding key
+
+        if (key === 'Função no projeto') {
+          memberAcademicRole.add(key);
+        }
       }
     }
 
