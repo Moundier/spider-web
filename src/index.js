@@ -32,7 +32,7 @@ async function scrape(projectId, browser) {
 
     const projectName = await page.$eval('title', (el) => el.textContent.trim());
 
-    // Check for the existence of an error pill element
+    // TODO: inspect values and error returns
     const errorPill = await page.$('.error.pill');
     let errorMessage = '';
 
@@ -57,7 +57,6 @@ async function scrape(projectId, browser) {
     }
 
     // TODO: get program
-
     let programId = null;
     let hyperlinkImage = null;
     let title = await page.$$eval('div.span12 > span', title => title[1].innerText);
@@ -75,13 +74,13 @@ async function scrape(projectId, browser) {
     let status = await page.$$eval('div.span6 > span', title => title[14].innerText);
     let keywords = null;
 
-    // TODO: Set of Status
+    // TODO: set of status
     programClassificInspector.add(classification);
 
-    // TODO: Set of Classifications
+    // TODO: set of classifications
     programSituationInspector.add(status);
 
-    // TODO: Program
+    // TODO: program attributes
     let program = new Program(
       null,
       null,
@@ -100,7 +99,7 @@ async function scrape(projectId, browser) {
       keywords
     );
     
-    // NOTE: Output reduced for better visualization
+    // NOTE: output reduced for better visualization
     program.title = program.title.substring(0, 50);
     program.summary = program.summary.substring(0, 50);
     program.objectives = program.objectives.substring(0, 50);
@@ -109,12 +108,13 @@ async function scrape(projectId, browser) {
     
     // TODO: program
     // console.log(program); 
-    console.log();
     console.log(programPanelDataInspector);
     console.log(programClassificInspector);
     console.log(programSituationInspector);
     console.log(memberAttributesInspector);
     console.log(memberAcademicRole);
+
+    // TODO: member pages
 
     let tabPointer = 1;
 
@@ -124,16 +124,21 @@ async function scrape(projectId, browser) {
       await page.waitForSelector('.btn.detalhes');
       let detalhesButtons = await page.$$('.btn.detalhes');
 
+      // TODO: pass through all buttons
       for (const button of detalhesButtons) {
 
         await page.waitForTimeout(600);
         console.log(`"Button ${detalhesButtons.indexOf(button)}"`);
 
+        // TODO: open the modal
+
         try {
-          await button.click(); // NOTE: Open the modal
+          await button.click();
         } catch (error) {
           fail('Failure on modal open: ' + error.message);
         }
+
+        // TODO: close the modal
 
         try {
           let closeButtons = null;
@@ -153,7 +158,7 @@ async function scrape(projectId, browser) {
         }
       }
 
-      // STEP: Goes to Next Page of Members
+      // NOTE: Goes to Next Page of Members
       let linkDisabled;
       const nextTabsLink = await page.$('li a[title="Próxima página"]');
       const disabledBtns = await page.$$('.disabled');
@@ -166,13 +171,15 @@ async function scrape(projectId, browser) {
 
       await extractModal(page);
 
-      // NOTE: Found one tab. Break to the next. (nextNotFound)
+      // TODO: pass or break conditions
+
+      // NOTE: found one tab. Break to the next. (nextNotFound)
       if (nextTabsLink == null) {
         warn('"Just one tab, break to the next URL"'); 
         break;
       }
       
-      // NOTE: No more tabs. Break to the next; (currentIsLast)
+      // NOTE: no more tabs. Break to the next; (currentIsLast)
       if (tabPointer > 1 && linkDisabled) {
         warn('"Break to the next URL"'); 
         break;
@@ -205,6 +212,10 @@ function getKey(string) {
   return value;
 };
 
+const memberAttributes = {
+
+}
+
 async function extractModal(page) {
 
   await page.waitForSelector('.modaljs-scroll-overlay');
@@ -214,17 +225,18 @@ async function extractModal(page) {
 
   for (const modal of deadModals) {
 
-    // for (const f of FieldsToExtract) {
-    //   console.log(f)
-    // }
-
     const paragraphs = await modal.$$('div.modaljs-scroll-overlay p');
 
     console.log('-'.repeat(100));
     for (const p of paragraphs) {
       const text = await p.evaluate(element => element.innerText);
       const key = text.split(':')[0];
-      const val = text.split(':')[1];
+      let value = text.split(':')[1];
+      let val;
+      
+      if (value) {
+        val = value.substring(1, value.lenght);
+      }
 
       if (paragraphs.indexOf(p) > 0) {
         memberAttributesInspector.add(getKey(text)); // TODO: Add to set
