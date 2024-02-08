@@ -17,10 +17,10 @@ enum MemberRole {
 class Member {
   id: number;
   name: string;
-  matricula: string;
+  matricula: string; // unique
   vinculo: string;
   vinculoStatus: string;
-  email: string;
+  email: string; // unique 
   lotacaoExercicio: string;
   lotacaoOficial: string;
   memberRole: string; // Assuming it's a string, as it's not specified
