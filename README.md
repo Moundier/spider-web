@@ -4,7 +4,7 @@ Puppeteer is a Node.js library for browser automation via the DevTools Protocol,
 
 ## Key Features
 - Headless browser automation
-- User interaction simulation
+- User interaction simulation (Button Clicks)
 - Screenshot capture and PDF generation
 - Effective handling of dynamic content and AJAX request
 - Thymeleaf
@@ -14,8 +14,8 @@ Puppeteer is a Node.js library for browser automation via the DevTools Protocol,
 - to go: playwright
 
 ## Requirements
-- Basic computer
-- Node.js installed
+- A computer 
+- `node`
 - `typeorm`
 - `pg`
 
@@ -26,25 +26,14 @@ Puppeteer is a Node.js library for browser automation via the DevTools Protocol,
 3. Ignore `node_modules` in Git
 4. Run `node index.js`
 
-### Pseudo Todo Code
-- (...)
-
 ### Todo
-- to do: button asynchronous open timeout
-- to do: inspect possible member attributes
-- to do: inspect possible breadcrumbs titles
-- to do: inspect possible member functions
-- to do: inspect possible program classification
-
-- to do : stopped in idProjeto=74155
-- to do: Implement later on tsc-node
-- to do: Implement udpated fetched buttons 
-
-- to do: in total, 11 attributes
-- to do: missing attributes (idProjeto=74582)
-- to do: extra attributes (idProjeto=74580)
-
-[DONE] Feb 7, 2024, 19:18:25 - Project ID: 70119 - Page Title: Portal de Projetos - Visualizar projeto - Project URL: https://portal.ufsm.br/projetos/publico/projetos/view.html?idProjeto=70119
+- [x] to do: modal asynchronous open timeout
+- [x] to do: inspect attributes of members
+- [x] to do: inspect titles on breadcrumbs 
+- [x] to do: inspect roles of member 
+- [x] to do: inspect classification of programs
+- [ ] to do: assign value to correct key
+- [ ] to do: Implement later on tsc-node 
 
 Set(8) {
   'Dados Básicos',
@@ -105,3 +94,8 @@ Set(20) {
   ' Responsável Técnico',
   ' Acompanhante'
 }
+
+### Ideas Assemble
+- Recommendations (Item-based, User-based, Content-based, Region-based)
+- Interactions System
+- Achievements System (Interactions, Time-use, Personal-profile)
