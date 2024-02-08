@@ -22,9 +22,11 @@ Puppeteer is a Node.js library for browser automation via the DevTools Protocol,
 ## Quick Start
 1. Generate `package-lock.json` with `npx npm init -y`
 2. Install Puppeteer with `npx npm install puppeteer`
-2. Install Playwright with `npx npm install playwright`
+3. Install `ts-node` with `npx npm install ts-node`
+3. Install `ts-node` with `npx tsc --init`
 3. Ignore `node_modules` in Git
 4. Run `node index.js`
+5. Run `npx tsx ./src/index.ts`
 
 ### Todo
 - [x] to do: modal asynchronous open timeout

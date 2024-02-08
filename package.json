@@ -2,7 +2,7 @@
   "name": "scrapper-puppeteer",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "index.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -12,7 +12,8 @@
   "dependencies": {
     "compromise": "^14.11.2",
     "playwright": "^1.41.2",
-    "puppeteer": "^21.10.0"
+    "puppeteer": "^21.10.0",
+    "ts-node": "^10.9.2"
   },
   "type": "module"
 }

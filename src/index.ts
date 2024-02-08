@@ -1,11 +1,11 @@
-import { launch } from 'puppeteer';
-import { now } from './utils/time.js';
-import { fail, done, note, warn } from './utils/todo.js';
-import { Program } from './model/program.js';
+import { Browser, ElementHandle, Page, launch } from 'puppeteer';
+import { now } from './utils/time';
+import { fail, done, note, warn } from './utils/todo'
+import { Program } from './model/program';
 
 async function main() {
   const browser = await launch({
-    headless: true,
+    headless: false,
   });
 
   for (let projectId = 74584; projectId >= 0; projectId--) {
@@ -17,27 +17,27 @@ async function main() {
 
 const baseUrl = 'https://portal.ufsm.br/projetos/publico/projetos/view.html?idProjeto=';
 
-let programPanelDataInspector = new Set(); // Dados Basicos, Inovacao e gesto financeira, Classificacoes, Participantes, Orgaos, Cidades de atuacao, Publico Alvo, Plano de Trabalho
-let programClassificInspector = new Set(); // ENSINO, PESQUISA, EXTENSAO, DESENVOLVIMENTO_INSTITUCIOAL,
-let programSituationInspector = new Set(); // SUSPENSO, CONCLUIDO_PUBLICADO, CANCELADO, EM_ANDAMENTO  
-let memberAttributesInspector = new Set(); // MATRÍCULA, VÍNCULO, SITUAÇÃO DO VÍNCULO, E-MAIL, LOTAÇÃO DE EXERCÍCIO, LOTAÇÃO OFICIAL, FUNÇÃO NO PROJETO, CARGA HORÁRIA, PERÍODO, RECEBE BOLSA PELO PROJETO, CURSO
-let memberAcademicRole = new Set(); //  Coordenador, Participante, Autor 
+let programPanelDataInspector: Set<string> = new Set(); // Dados Basicos, Inovacao e gesto financeira, Classificacoes, Participantes, Orgaos, Cidades de atuacao, Publico Alvo, Plano de Trabalho
+let programClassificInspector: Set<string> = new Set(); // ENSINO, PESQUISA, EXTENSAO, DESENVOLVIMENTO_INSTITUCIOAL,
+let programSituationInspector: Set<string> = new Set(); // SUSPENSO, CONCLUIDO_PUBLICADO, CANCELADO, EM_ANDAMENTO  
+let memberAttributesInspector: Set<string> = new Set(); // MATRÍCULA, VÍNCULO, SITUAÇÃO DO VÍNCULO, E-MAIL, LOTAÇÃO DE EXERCÍCIO, LOTAÇÃO OFICIAL, FUNÇÃO NO PROJETO, CARGA HORÁRIA, PERÍODO, RECEBE BOLSA PELO PROJETO, CURSO
+let memberAcademicRole: Set<string> = new Set(); //  Coordenador, Participante, Autor 
 
-async function scrape(projectId, browser) {
+async function scrape(projectId: number, browser: Browser) {
   const page = await browser.newPage();
 
   try {
     const projectUrl = `${baseUrl}${projectId}`;
     const response = await page.goto(projectUrl, { waitUntil: 'domcontentloaded' });
 
-    const projectName = await page.$eval('title', (el) => el.textContent.trim());
+    const projectName = await page.$eval('title', (el: any) => el.textContent.trim());
 
     // TODO: inspect values and error returns
-    const errorPill = await page.$('.error.pill');
-    let errorMessage = '';
+    const errorPill: ElementHandle<Element> | null = await page.$('.error.pill');
+    let errorMessage: string = '';
 
     if (errorPill != null) {
-      errorMessage = await errorPill.evaluate((el) => el.textContent.trim());
+      errorMessage = await errorPill.evaluate((el: any) => el.textContent.trim());
     }
 
     if (errorMessage === "Caminho inválido." || errorMessage === "Este é um projeto confidencial") {
@@ -50,7 +50,7 @@ async function scrape(projectId, browser) {
     }
 
     // TODO: get panel titles
-    const panelTitles = await page.$$eval('.panel-title', titles => titles.map(title => title.textContent.trim()));
+    const panelTitles = await page.$$eval('.panel-title', (titles: any) => titles.map((title: any) => title.textContent.trim()));
   
     for (const title of panelTitles) {
       programPanelDataInspector.add(title);
@@ -59,20 +59,20 @@ async function scrape(projectId, browser) {
     // TODO: get program
     let programId = null;
     let hyperlinkImage = null;
-    let title = await page.$$eval('div.span12 > span', title => title[1].innerText);
-    let numberUnique = await page.$$eval('div.span6 > span', title => title[1].innerText); 
-    let classification = await page.$$eval('div.span6 > span', title => title[4].innerText);
-    let summary = await page.$$eval('div.span12 > span', title => title[3].innerText); 
-    let objectives = await page.$$eval('div.span12 > span', title => title[5].innerText); 
-    let defense = await page.$$eval('div.span12 > span', title => title[7].innerText);  
-    let results = await page.$$eval('div.span12 > span', title => title[9].innerText); 
-    let dateStart =await page.$$eval('div.span3 > span', title => title[1].innerText);
-    let dateFinal =await page.$$eval('div.span3 > span', title => title[3].innerText);
-    let publicationDate = null;
-    let completionDate = null;
+    let title = await page.$$eval('div.span12 > span', (title: any) => title[1].innerText);
+    let numberUnique = await page.$$eval('div.span6 > span', (title: any) => title[1].innerText); 
+    let classification = await page.$$eval('div.span6 > span', (title: any) => title[4].innerText);
+    let summary = await page.$$eval('div.span12 > span', (title: any) => title[3].innerText); 
+    let objectives = await page.$$eval('div.span12 > span', (title: any) => title[5].innerText); 
+    let defense = await page.$$eval('div.span12 > span', (title: any) => title[7].innerText);  
+    let results = await page.$$eval('div.span12 > span', (title: any) => title[9].innerText); 
+    let dateStart =await page.$$eval('div.span3 > span', (title: any) => title[1].innerText);
+    let dateFinal =await page.$$eval('div.span3 > span', (title: any) => title[3].innerText);
+    let publicationDate = '';
+    let completionDate = '';
 
-    let status = await page.$$eval('div.span6 > span', title => title[14].innerText);
-    let keywords = null;
+    let status = await page.$$eval('div.span6 > span', (title: any) => title[14].innerText);
+    let keywords = new Set<string>();
 
     // TODO: set of status
     programClassificInspector.add(classification);
@@ -81,9 +81,9 @@ async function scrape(projectId, browser) {
     programSituationInspector.add(status);
 
     // TODO: program attributes
-    let program = new Program(
-      null,
-      null,
+    let program: Program = new Program(
+      0,
+      '',
       title,
       numberUnique,
       classification,
@@ -100,11 +100,11 @@ async function scrape(projectId, browser) {
     );
     
     // NOTE: output reduced for better visualization
-    program.title = program.title.substring(0, 50);
-    program.summary = program.summary.substring(0, 50);
-    program.objectives = program.objectives.substring(0, 50);
-    program.defense = program.defense.substring(0, 50);
-    program.results = program.results.substring(0, 50);
+    // program.title = program.title.substring(0, 50);
+    // program.summary = program.summary.substring(0, 50);
+    // program.objectives = program.objectives.substring(0, 50);
+    // program.defense = program.defense.substring(0, 50);
+    // program.results = program.results.substring(0, 50);
     
     // TODO: program
     // console.log(program); 
@@ -134,26 +134,27 @@ async function scrape(projectId, browser) {
 
         try {
           await button.click();
-        } catch (error) {
+        } catch (error: any) {
           fail('Failure on modal open: ' + error.message);
         }
 
         // TODO: close the modal
 
         try {
-          let closeButtons = null;
-          let lastCloseButton = null;
+          let closeButtons: any = null;
+          let lastCloseButton: any = null;
 
           while (lastCloseButton === null || lastCloseButton === undefined || !(await lastCloseButton.isIntersectingViewport())) {
             await page.waitForSelector('.close');
             closeButtons = await page.$$('.close');
+
             const lastIndex = closeButtons.length - 1;
             lastCloseButton = closeButtons[lastIndex];
           }
         
           await lastCloseButton.click();
 
-        } catch (error) {
+        } catch (error: any) {
           fail('Button (Close): ' + error.message);
         }
       }
@@ -161,7 +162,7 @@ async function scrape(projectId, browser) {
       // NOTE: Goes to Next Page of Members
       let linkDisabled;
       const nextTabsLink = await page.$('li a[title="Próxima página"]');
-      const disabledBtns = await page.$$('.disabled');
+      const disabledBtns: any = await page.$$('.disabled');
 
       if (disabledBtns >= 3) {
         linkDisabled = disabledBtns[2]; // NOTE: Get the third disabled skip button.  
@@ -169,7 +170,7 @@ async function scrape(projectId, browser) {
 
       console.log(nextTabsLink, linkDisabled);
 
-      await extractModal(page);
+      await getMemberFromModal(page);
 
       // TODO: pass or break conditions
 
@@ -188,25 +189,25 @@ async function scrape(projectId, browser) {
       // NOTE: Found more Tabs. Iterate! (goToNextTab)
       if (nextTabsLink && tabPointer >= 1 && nextTabsLink) {
         note('"Has next tab"');
-        await page.evaluate(element => element.click(), nextTabsLink); // Use await here
+        await page.evaluate((element: any) => element.click(), nextTabsLink); // Use await here
         tabPointer++;
       }
     }
 
-  } catch (error) {
+  } catch (error: any) {
     fail(`Error scraping project ${projectId}: ${error.message}`);
   } finally {
     await page.close();
   }
 }
 
-function getVal(string) {
+function getVal(string: string) {
   const parts = string.split(':');
   const value = parts[1].trim();
   return value;
 };
 
-function getKey(string) {
+function getKey(string: string) {
   const parts = string.split(':');
   const value = parts[0].trim();
   return value;
@@ -216,7 +217,7 @@ const memberAttributes = {
 
 }
 
-async function extractModal(page) {
+async function getMemberFromModal(page: any) {
 
   await page.waitForSelector('.modaljs-scroll-overlay');
   const deadModals = await page.$$('.modaljs-scroll-overlay');
@@ -229,7 +230,7 @@ async function extractModal(page) {
 
     console.log('-'.repeat(100));
     for (const p of paragraphs) {
-      const text = await p.evaluate(element => element.innerText);
+      const text = await p.evaluate((element: any) => element.innerText);
       const key = text.split(':')[0];
       let value = text.split(':')[1];
       let val;
