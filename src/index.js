@@ -193,13 +193,13 @@ async function scrape(projectId, browser) {
   }
 }
 
-function spliter(string) {
+function getVal(string) {
   const parts = string.split(':');
   const value = parts[1].trim();
   return value;
 };
 
-function attrs(string) {
+function getKey(string) {
   const parts = string.split(':');
   const value = parts[0].trim();
   return value;
@@ -220,14 +220,14 @@ async function extractModal(page) {
 
     const paragraphs = await modal.$$('div.modaljs-scroll-overlay p');
 
-    console.log('-'.repeat(100))
+    console.log('-'.repeat(100));
     for (const p of paragraphs) {
       const text = await p.evaluate(element => element.innerText);
       const key = text.split(':')[0];
       const val = text.split(':')[1];
 
       if (paragraphs.indexOf(p) > 0) {
-        memberAttributesInspector.add(attrs(text)); // TODO: Add to set
+        memberAttributesInspector.add(getKey(text)); // TODO: Add to set
         console.log(`index: ${paragraphs.indexOf(p)} key: ${key}, val: ${val}`);  // TODO: set value to corresponding key
 
         if (key === 'Função no projeto') {
@@ -237,7 +237,7 @@ async function extractModal(page) {
     }
 
     // const name = await modal.$eval('div.modaljs-scroll-overlay p strong:nth-child(1)', strong => strong.innerText);
-    // const matricula = await modal.$eval('div.modaljs-scroll-overlay p:nth-child(2)', strong => strong.innerText); // TODO: implement spliter
+    // const matricula = await modal.$eval('div.modaljs-scroll-overlay p:nth-child(2)', strong => strong.innerText); // TODO: implement getVal
     // const vinculo = await modal.$eval('div.modaljs-scroll-overlay p:nth-child(3)', strong => strong.innerText);
     // const situacao = await modal.$eval('div.modaljs-scroll-overlay p:nth-child(4)', strong => strong.innerText); // MAKE IT HERE  
     // const email = await modal.$eval('div.modaljs-scroll-overlay p:nth-child(5)', strong => strong.innerText); // MAKE IT HERE  
@@ -248,8 +248,8 @@ async function extractModal(page) {
     // const recebeBolsa = await modal.$eval('div.modaljs-scroll-overlay p:nth-child(10)', strong => strong.innerText); // MAKE IT HERE 
 
     // const data = { name, matricula , vinculo , situacao , email , curso , funcao , cargaHoraria, periodo, recebeBolsa };
-    // data.matricula = spliter(data.matricula);
-    // data.vinculo = spliter(data.vinculo);
+    // data.matricula = getVal(data.matricula);
+    // data.vinculo = getVal(data.vinculo);
 
     // console.log(data);
   }
