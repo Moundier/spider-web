@@ -4,10 +4,9 @@ import { fail, done, note, warn } from './utils/todo'
 import { Program } from './model/program';
 
 async function main(): Promise<void> {
-  const browser = await launch({
-    headless: false,
-  });
 
+  const browser = await launch({ headless: false });
+  // NOTE: loop downwards
   for (let projectId = 74584; projectId >= 0; projectId--) {
     await scrape(projectId, browser);
   }
@@ -66,8 +65,8 @@ async function scrape(projectId: number, browser: Browser) {
     let objectives = await page.$$eval('div.span12 > span', (title: any) => title[5].innerText); 
     let defense = await page.$$eval('div.span12 > span', (title: any) => title[7].innerText);  
     let results = await page.$$eval('div.span12 > span', (title: any) => title[9].innerText); 
-    let dateStart =await page.$$eval('div.span3 > span', (title: any) => title[1].innerText);
-    let dateFinal =await page.$$eval('div.span3 > span', (title: any) => title[3].innerText);
+    let dateStart = await page.$$eval('div.span3 > span', (title: any) => title[1].innerText);
+    let dateFinal = await page.$$eval('div.span3 > span', (title: any) => title[3].innerText);
     let publicationDate = '';
     let completionDate = '';
 
@@ -83,7 +82,7 @@ async function scrape(projectId: number, browser: Browser) {
     // TODO: program attributes
     let program: Program = {
       programId: 0,
-      imageHyperlink: '',
+      imageSource: '',
       title,
       numberUnique,
       classification,
@@ -100,11 +99,12 @@ async function scrape(projectId: number, browser: Browser) {
     };
     
     // NOTE: output reduced for better visualization
-    // program.title = program.title.substring(0, 50);
-    // program.summary = program.summary.substring(0, 50);
-    // program.objectives = program.objectives.substring(0, 50);
-    // program.defense = program.defense.substring(0, 50);
-    // program.results = program.results.substring(0, 50);
+
+    program.title = program.title ? program.title.substring(0, 50) : null;
+    program.summary = program.summary ? program.summary.substring(0, 50) : null;
+    program.objectives = program.objectives ? program.objectives.substring(0, 50) : null; 
+    program.defense = program.defense ?  program.defense.substring(0, 50) : null;
+    program.results = program.results ? program.results.substring(0, 50) : null;
     
     // TODO: program inspections
     // console.log(program); 
@@ -114,7 +114,15 @@ async function scrape(projectId: number, browser: Browser) {
     // console.log(memberAttributesInspector);
     // console.log(memberAcademicRole);
 
-    // TODO: member pages
+    // TODO: collect keywords of programs
+    let firstKeyword = await page.$$eval('div.span3 > span', (key: any) => key[5].innerText);
+    let secondKeyword = await page.$$eval('div.span3 > span', (key: any) => key[7].innerText);
+    let thirdKeyword = await page.$$eval('div.span3 > span', (key: any) => key[9].innerText);
+    let fourthKeyword = await page.$$eval('div.span3 > span', (key: any) => key[11].innerText);
+    
+    // console.log(`List [ ${firstKeyword}, ${secondKeyword}, ${thirdKeyword}, ${fourthKeyword}, ]`);
+
+    // TODO: collect members by pages
 
     let tabPointer = 1;
 
@@ -147,7 +155,6 @@ async function scrape(projectId: number, browser: Browser) {
           while (lastCloseButton === null || lastCloseButton === undefined || !(await lastCloseButton.isIntersectingViewport())) {
             await page.waitForSelector('.close');
             closeButtons = await page.$$('.close');
-
             const lastIndex = closeButtons.length - 1;
             lastCloseButton = closeButtons[lastIndex];
           }
@@ -201,19 +208,11 @@ async function scrape(projectId: number, browser: Browser) {
   }
 }
 
-function getVal(string: string) {
-  const parts = string.split(':');
-  const value = parts[1].trim();
-  return value;
-};
-
 function getKey(string: string) {
   const parts = string.split(':');
   const value = parts[0].trim();
   return value;
 };
-
-
 
 async function getMemberFromModal(page: any): Promise<void> {
 
@@ -226,12 +225,13 @@ async function getMemberFromModal(page: any): Promise<void> {
 
     // NOTE: must be null here. If not, it inherits incorrectly the previous member attributes
     let member: Member = {
-      id: null,
+      memberId: null,
       name: null,
       matricula: null,
       vinculo: null,
       vinculoStatus: null,
       email: null,
+      imageSource: null,
       lotacaoExercicio: null,
       lotacaoOficial: null,
       memberRole: null,
@@ -245,16 +245,21 @@ async function getMemberFromModal(page: any): Promise<void> {
 
     const paragraphs = await modal.$$('div.modaljs-scroll-overlay p');
 
-    console.log('-'.repeat(100));
+    console.log('-'.repeat(100)); // NOTE: a divisor between members
+
+    const imageSource = await modal.$eval('div.modaljs-scroll-overlay .span3 img', (image: any) => image.src); 
+    console.log(`Image ${imageSource}`)
 
     for (const p of paragraphs) {
 
       const text = await p.evaluate((el: any) => el.innerText);
-      let [key, value] = text.split(':');
+      let [key, value]: any = text.split(':');
       
-      if  (value) {
+      if (value) {
         value = value.substring(1, value.lenght);
       }
+
+      // TODO: image hyperlink
 
       // const name = await modal.$eval('div.modaljs-scroll-overlay p strong:nth-child(1)', (name: any) => name.innerText);
       // console.log(key);
@@ -301,7 +306,7 @@ async function getMemberFromModal(page: any): Promise<void> {
           member.valor = value.trim();
           break;
         default:
-          note(`Unknown key: ${key}`);
+          note(`Unknown key (possibly name): ${key}`);
           member.name = key.trim();
           break;
       }
@@ -337,7 +342,6 @@ async function getMemberFromModal(page: any): Promise<void> {
 
     console.log(member);
   }
-
 }
 
 enum MemberDetails {
@@ -355,5 +359,7 @@ enum MemberDetails {
   Bolsa = 'Bolsa',
   Valor = 'Valor'
 }
+
+// NOTE: main function call
 
 main();

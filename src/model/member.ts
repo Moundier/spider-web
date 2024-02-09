@@ -32,19 +32,20 @@ enum MemberRole {
 }
 
 interface Member {
-  id: number | null;
-  name: string | null;
-  matricula: string | null; // unique
-  vinculo: AcademicRole | null; // role
-  vinculoStatus: string | null;
-  email: string | null; // unique 
+  memberId: number | null; // member
+  name: string | null; // member
+  matricula: string | null; // // member unique
+  vinculo: AcademicRole | null; // member role
+  vinculoStatus: string | null; // member
+  email: string | null; // member unique 
+  imageSource: string | null;
   lotacaoExercicio: string | null;
   lotacaoOficial: string | null;
   memberRole: MemberRole | null; // role
   cargaHoraria: string | null;
   periodo: string | null;
   recebeBolsa: string | null;
-  curso: string | null;
+  curso: string | null; // member
   bolsa: string | null;
   valor: string | null;
 }

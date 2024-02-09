@@ -1,13 +1,13 @@
 export interface Program {
   programId: number; // unique 
-  imageHyperlink?: string;
-  title: string;
+  imageSource?: string;
+  title: string | null;
   numberUnique?: string; // unique 
   classification: Classification;
-  summary?: string;
-  objectives?: string;
-  defense?: string;
-  results?: string;
+  summary?: string | null;
+  objectives?: string | null;
+  defense?: string | null;
+  results?: string | null;
   dateStart?: string | null;
   dateFinal?: string | null;
   publicationDate?: string | null;
