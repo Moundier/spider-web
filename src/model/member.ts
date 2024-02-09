@@ -5,63 +5,46 @@ enum AcademicRole {
 }
 
 enum MemberRole {
-  AUTOR = "Author",
-  PARTICIPANTE = "Participant",
-  COAUTOR = "Co-author",
-  COORDENADOR = "Coordinator",
-  PESQUISADOR = "Researcher",
-  PALESTRANTE = "Speaker",
-  ORGANIZADOR = "Event organizer"
+  QUALQUER_FUNCAO = "",
+  COORDENADOR = "Coordenador",
+  ORIENTADOR = "Orientador",
+  BOLSISTA = "Bolsista",
+  PARTICIPANTE = "Participante",
+  COLABORADOR = "Colaborador",
+  CO_ORIENTADOR = "Co-Orientador",
+  APRESENTADOR = "Apresentador",
+  AUTOR = "Autor",
+  CO_AUTOR = "Co-Autor",
+  EXECUTOR = "Executor",
+  ESTAGIARIO = "Estagiário",
+  ACOMPANHANTE = "Acompanhante",
+  MONITOR = "Monitor",
+  PROFESSOR_CURSO = "Professor do Curso",
+  TUTOR_CURSO = "Tutor do Curso",
+  NAO_DEFINIDA_OUTRA_FUNCAO = "Não Definida Outra Função",
+  PESQUISADOR = "Pesquisador",
+  INSTRUTOR_CURSO = "Instrutor do Curso",
+  PALESTRANTE = "Palestrante",
+  FISCAL_FINANCEIRO = "Fiscal Financeiro",
+  RESPONSAVEL_TECNICO = "Responsável Técnico",
+  COORDENADOR_ACADEMICO = "Coordenador Acadêmico",
+  COORDENADOR_ADMINISTRATIVO = "Coordenador Administrativo"
 }
 
-class Member {
-  id: number;
-  name: string;
-  matricula: string; // unique
-  vinculo: string;
-  vinculoStatus: string;
-  email: string; // unique 
-  lotacaoExercicio: string;
-  lotacaoOficial: string;
-  memberRole: string; // Assuming it's a string, as it's not specified
-  cargaHoraria: string;
-  periodo: string;
-  recebeBolsa: string;
-  curso: string;
-  bolsa: string;
-  valor: string;
-
-  constructor(
-    id: number,
-    name: string,
-    matricula: string,
-    vinculo: string,
-    vinculoStatus: string,
-    email: string,
-    lotacaoExercicio: string,
-    lotacaoOficial: string,
-    memberRole: string, // function
-    cargaHoraria: string,
-    periodo: string,
-    recebeBolsa: string,
-    curso: string,
-    bolsa: string,
-    valor: string
-  ) {
-    this.id = id;
-    this.name = name;
-    this.matricula = matricula;
-    this.vinculo = vinculo;
-    this.vinculoStatus = vinculoStatus;
-    this.email = email;
-    this.lotacaoExercicio = lotacaoExercicio;
-    this.lotacaoOficial = lotacaoOficial;
-    this.memberRole = memberRole;
-    this.cargaHoraria = cargaHoraria;
-    this.periodo = periodo;
-    this.recebeBolsa = recebeBolsa;
-    this.curso = curso;
-    this.bolsa = bolsa;
-    this.valor = valor;
-  }
+interface Member {
+  id: number | null;
+  name: string | null;
+  matricula: string | null; // unique
+  vinculo: AcademicRole | null; // role
+  vinculoStatus: string | null;
+  email: string | null; // unique 
+  lotacaoExercicio: string | null;
+  lotacaoOficial: string | null;
+  memberRole: MemberRole | null; // role
+  cargaHoraria: string | null;
+  periodo: string | null;
+  recebeBolsa: string | null;
+  curso: string | null;
+  bolsa: string | null;
+  valor: string | null;
 }

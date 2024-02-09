@@ -28,12 +28,14 @@ Puppeteer is a Node.js library for browser automation via the DevTools Protocol,
 
 ### Todo
 - [x] to do: modal asynchronous open timeout
+- [x] to do: modal asynchronous close timeout
 - [x] to do: inspect attributes of members
 - [x] to do: inspect titles on breadcrumbs 
 - [x] to do: inspect roles of member 
 - [x] to do: inspect classification of programs
-- [ ] to do: assign value to correct key
-- [ ] to do: Implement later on tsc-node 
+- [x] to do: assign value to it's correct key
+- [x] to do: 
+- [ ] to do: Find image hyperlink
 
 Set(8) {
   'Dados Básicos',

@@ -3,7 +3,7 @@ import { now } from './utils/time';
 import { fail, done, note, warn } from './utils/todo'
 import { Program } from './model/program';
 
-async function main() {
+async function main(): Promise<void> {
   const browser = await launch({
     headless: false,
   });
@@ -12,7 +12,7 @@ async function main() {
     await scrape(projectId, browser);
   }
 
-  await browser.close();
+  return await browser.close();
 }
 
 const baseUrl = 'https://portal.ufsm.br/projetos/publico/projetos/view.html?idProjeto=';
@@ -50,7 +50,7 @@ async function scrape(projectId: number, browser: Browser) {
     }
 
     // TODO: get panel titles
-    const panelTitles = await page.$$eval('.panel-title', (titles: any) => titles.map((title: any) => title.textContent.trim()));
+    const panelTitles: string = await page.$$eval('.panel-title', (titles: any) => titles.map((title: any) => title.textContent.trim()));
   
     for (const title of panelTitles) {
       programPanelDataInspector.add(title);
@@ -81,9 +81,9 @@ async function scrape(projectId: number, browser: Browser) {
     programSituationInspector.add(status);
 
     // TODO: program attributes
-    let program: Program = new Program(
-      0,
-      '',
+    let program: Program = {
+      programId: 0,
+      imageHyperlink: '',
       title,
       numberUnique,
       classification,
@@ -97,7 +97,7 @@ async function scrape(projectId: number, browser: Browser) {
       completionDate,
       status,
       keywords
-    );
+    };
     
     // NOTE: output reduced for better visualization
     // program.title = program.title.substring(0, 50);
@@ -106,13 +106,13 @@ async function scrape(projectId: number, browser: Browser) {
     // program.defense = program.defense.substring(0, 50);
     // program.results = program.results.substring(0, 50);
     
-    // TODO: program
+    // TODO: program inspections
     // console.log(program); 
-    console.log(programPanelDataInspector);
-    console.log(programClassificInspector);
-    console.log(programSituationInspector);
-    console.log(memberAttributesInspector);
-    console.log(memberAcademicRole);
+    // console.log(programPanelDataInspector);
+    // console.log(programClassificInspector);
+    // console.log(programSituationInspector);
+    // console.log(memberAttributesInspector);
+    // console.log(memberAcademicRole);
 
     // TODO: member pages
 
@@ -159,9 +159,9 @@ async function scrape(projectId: number, browser: Browser) {
         }
       }
 
-      // NOTE: Goes to Next Page of Members
+      // NOTE: goes to next page of members
       let linkDisabled;
-      const nextTabsLink = await page.$('li a[title="Próxima página"]');
+      const nextTabsLink: any = await page.$('li a[title="Próxima página"]');
       const disabledBtns: any = await page.$$('.disabled');
 
       if (disabledBtns >= 3) {
@@ -174,7 +174,7 @@ async function scrape(projectId: number, browser: Browser) {
 
       // TODO: pass or break conditions
 
-      // NOTE: found one tab. Break to the next. (nextNotFound)
+      // NOTE: got just one tab. Break to the next. (nextNotFound)
       if (nextTabsLink == null) {
         warn('"Just one tab, break to the next URL"'); 
         break;
@@ -213,11 +213,25 @@ function getKey(string: string) {
   return value;
 };
 
-const memberAttributes = {
+let member: Member = {
+  id: null,
+  name: null,
+  matricula: null,
+  vinculo: null,
+  vinculoStatus: null,
+  email: null,
+  lotacaoExercicio: null,
+  lotacaoOficial: null,
+  memberRole: null,
+  cargaHoraria: null,
+  periodo: null,
+  recebeBolsa: null,
+  curso: null,
+  bolsa: null,
+  valor: null
+};
 
-}
-
-async function getMemberFromModal(page: any) {
+async function getMemberFromModal(page: any): Promise<void> {
 
   await page.waitForSelector('.modaljs-scroll-overlay');
   const deadModals = await page.$$('.modaljs-scroll-overlay');
@@ -229,27 +243,82 @@ async function getMemberFromModal(page: any) {
     const paragraphs = await modal.$$('div.modaljs-scroll-overlay p');
 
     console.log('-'.repeat(100));
+
     for (const p of paragraphs) {
-      const text = await p.evaluate((element: any) => element.innerText);
-      const key = text.split(':')[0];
-      let value = text.split(':')[1];
-      let val;
+
+      const text = await p.evaluate((el: any) => el.innerText);
+      let [key, value] = text.split(':');
       
-      if (value) {
-        val = value.substring(1, value.lenght);
+      if  (value) {
+        value = value.substring(1, value.lenght);
+      }
+
+      // const name = await modal.$eval('div.modaljs-scroll-overlay p strong:nth-child(1)', (name: any) => name.innerText);
+      // console.log(key);
+      // NOTE: this is required. Some attributes are missing, and some are present.  
+
+      switch (key) {
+        case MemberDetails.Nome:
+          member.name = value.trim();
+          break;
+        case MemberDetails.Matricula:
+          member.matricula = value.trim();
+          break;
+        case MemberDetails.Vinculo:
+          member.vinculo = value.trim();
+          break;
+        case MemberDetails.SituacaoVinculo:
+          member.vinculoStatus = value.trim();
+          break;
+        case MemberDetails.Email:
+          member.email = value.trim();
+          break;
+        case MemberDetails.LotacaoExercicio:
+          member.lotacaoExercicio = value.trim();
+          break;
+        case MemberDetails.LotacaoOficial:
+          member.lotacaoOficial = value.trim();
+          break;
+        case MemberDetails.FuncaoProjeto:
+          member.memberRole = value.trim();
+          break;
+        case MemberDetails.CargaHoraria:
+          member.cargaHoraria = value.trim();
+          break;
+        case MemberDetails.Periodo:
+          member.periodo = value.trim();
+          break;
+        case MemberDetails.RecebeBolsaPeloProjeto:
+          member.recebeBolsa = value.trim();
+          break;
+        case MemberDetails.Curso:
+          member.curso = value.trim();
+          break;
+        case MemberDetails.Bolsa:
+          member.bolsa = value.trim();
+          break;
+        case MemberDetails.Valor:
+          member.valor = value.trim();
+          break;
+        default:
+          note(`Unknown key: ${key}`);
+          member.name = key.trim();
+          break;
       }
 
       if (paragraphs.indexOf(p) > 0) {
-        memberAttributesInspector.add(getKey(text)); // TODO: Add to set
-        console.log(`index: ${paragraphs.indexOf(p)} key: ${key}, val: ${val}`);  // TODO: set value to corresponding key
+        // TODO: add to set
+        memberAttributesInspector.add(getKey(text)); 
+
+        // NOTE: inspect keys and values
+        // console.log(`index: ${paragraphs.indexOf(p)} key: ${key}, val: ${value}`);
 
         if (key === 'Função no projeto') {
-          memberAcademicRole.add(val);
+          memberAcademicRole.add(value);
         }
       }
     }
 
-    // const name = await modal.$eval('div.modaljs-scroll-overlay p strong:nth-child(1)', strong => strong.innerText);
     // const matricula = await modal.$eval('div.modaljs-scroll-overlay p:nth-child(2)', strong => strong.innerText); // TODO: implement getVal
     // const vinculo = await modal.$eval('div.modaljs-scroll-overlay p:nth-child(3)', strong => strong.innerText);
     // const situacao = await modal.$eval('div.modaljs-scroll-overlay p:nth-child(4)', strong => strong.innerText); // MAKE IT HERE  
@@ -265,7 +334,27 @@ async function getMemberFromModal(page: any) {
     // data.vinculo = getVal(data.vinculo);
 
     // console.log(data);
+
+    console.log(member);
   }
+
+}
+
+enum MemberDetails {
+  Nome = '',
+  Matricula = 'Matrícula',
+  Vinculo = 'Vínculo',
+  SituacaoVinculo = 'Situação do vínculo',
+  Email = 'E-mail',
+  LotacaoExercicio = 'Lotação de Exercício',
+  LotacaoOficial = 'Lotação Oficial',
+  FuncaoProjeto = 'Função no projeto',
+  CargaHoraria = 'Carga horária',
+  Periodo = 'Período',
+  RecebeBolsaPeloProjeto = 'Recebe bolsa pelo projeto',
+  Curso = 'Curso',
+  Bolsa = 'Bolsa',
+  Valor = 'Valor'
 }
 
 main();
