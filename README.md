@@ -34,8 +34,9 @@ Puppeteer is a Node.js library for browser automation via the DevTools Protocol,
 - [x] to do: inspect roles of member 
 - [x] to do: inspect classification of programs
 - [x] to do: assign value to it's correct key
-- [x] to do: 
-- [ ] to do: Find image hyperlink
+- [ ] to do: attach project id, for future inspections
+- [ ] to do: image source hyperlink
+- [ ] to do: projects have many addresses, many keywords, many members 
 
 Set(8) {
   'Dados Básicos',

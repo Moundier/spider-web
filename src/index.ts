@@ -213,23 +213,7 @@ function getKey(string: string) {
   return value;
 };
 
-let member: Member = {
-  id: null,
-  name: null,
-  matricula: null,
-  vinculo: null,
-  vinculoStatus: null,
-  email: null,
-  lotacaoExercicio: null,
-  lotacaoOficial: null,
-  memberRole: null,
-  cargaHoraria: null,
-  periodo: null,
-  recebeBolsa: null,
-  curso: null,
-  bolsa: null,
-  valor: null
-};
+
 
 async function getMemberFromModal(page: any): Promise<void> {
 
@@ -239,6 +223,25 @@ async function getMemberFromModal(page: any): Promise<void> {
   console.log('Number of modals: ' + deadModals.length);
 
   for (const modal of deadModals) {
+
+    // NOTE: must be null here. If not, it inherits incorrectly the previous member attributes
+    let member: Member = {
+      id: null,
+      name: null,
+      matricula: null,
+      vinculo: null,
+      vinculoStatus: null,
+      email: null,
+      lotacaoExercicio: null,
+      lotacaoOficial: null,
+      memberRole: null,
+      cargaHoraria: null,
+      periodo: null,
+      recebeBolsa: null,
+      curso: null,
+      bolsa: null,
+      valor: null
+    };
 
     const paragraphs = await modal.$$('div.modaljs-scroll-overlay p');
 
@@ -258,9 +261,6 @@ async function getMemberFromModal(page: any): Promise<void> {
       // NOTE: this is required. Some attributes are missing, and some are present.  
 
       switch (key) {
-        case MemberDetails.Nome:
-          member.name = value.trim();
-          break;
         case MemberDetails.Matricula:
           member.matricula = value.trim();
           break;
@@ -341,7 +341,6 @@ async function getMemberFromModal(page: any): Promise<void> {
 }
 
 enum MemberDetails {
-  Nome = '',
   Matricula = 'Matrícula',
   Vinculo = 'Vínculo',
   SituacaoVinculo = 'Situação do vínculo',
