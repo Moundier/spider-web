@@ -16,7 +16,6 @@ Puppeteer is a Node.js library for browser automation via the DevTools Protocol,
 
 ## Requirements
 - `node`
-- `@types/express`
 - `pg`
 - `typeorm`: not only boilerplate, but also 
 - `tsx`
