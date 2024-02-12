@@ -3,18 +3,17 @@ import { now } from './utils/time';
 import { fail, done, note, warn } from './utils/todo'
 import { Program } from './model/program';
 
+const baseUrl = 'https://portal.ufsm.br/projetos/publico/projetos/view.html?idProjeto=';
+
 async function main(): Promise<void> {
 
   const browser = await launch({ headless: false });
-  // NOTE: loop downwards
-  for (let projectId = 74584; projectId >= 0; projectId--) {
+  for (let projectId = 74451; projectId >= 0; projectId--) { // 74584 top 74502 test 74510 test2 ERROR: 74449 
     await scrape(projectId, browser);
   }
 
   return await browser.close();
 }
-
-const baseUrl = 'https://portal.ufsm.br/projetos/publico/projetos/view.html?idProjeto=';
 
 let programPanelDataInspector: Set<string> = new Set(); // Dados Basicos, Inovacao e gesto financeira, Classificacoes, Participantes, Orgaos, Cidades de atuacao, Publico Alvo, Plano de Trabalho
 let programClassificInspector: Set<string> = new Set(); // ENSINO, PESQUISA, EXTENSAO, DESENVOLVIMENTO_INSTITUCIOAL,
@@ -40,12 +39,12 @@ async function scrape(projectId: number, browser: Browser) {
     }
 
     if (errorMessage === "Caminho inválido." || errorMessage === "Este é um projeto confidencial") {
-      fail(`${now()} - Project ID: ${projectId} - Page Title: ${projectUrl} - HTTP Status: ${response ? response.status() : 'N/A'} - Error Message: ${errorMessage}`);
+      fail(`${now()} HTTP Status: ${response ? response.status() : 'N/A'} - ${projectUrl} - Error: ${errorMessage}`);
       return;
     }
 
     if (response && response.status() === 200) {
-      done(`${now()} - Project ID: ${projectId} - Page Title: ${projectName} - Project URL: ${projectUrl}`);
+      done(`${now()} Found url: ${projectUrl}`);
     }
 
     // TODO: get panel titles
@@ -67,11 +66,11 @@ async function scrape(projectId: number, browser: Browser) {
     let results = await page.$$eval('div.span12 > span', (title: any) => title[9].innerText); 
     let dateStart = await page.$$eval('div.span3 > span', (title: any) => title[1].innerText);
     let dateFinal = await page.$$eval('div.span3 > span', (title: any) => title[3].innerText);
-    let publicationDate = '';
-    let completionDate = '';
-
     let status = await page.$$eval('div.span6 > span', (title: any) => title[14].innerText);
-    let keywords = new Set<string>();
+    // let keywords = new Set<string>();
+
+    // TODO: collect hyperlink
+    const hyperlink = projectUrl; // NOTE: repeated
 
     // TODO: set of status
     programClassificInspector.add(classification);
@@ -83,6 +82,7 @@ async function scrape(projectId: number, browser: Browser) {
     let program: Program = {
       programId: 0,
       imageSource: '',
+      domainImageSource: '',
       title,
       numberUnique,
       classification,
@@ -92,10 +92,10 @@ async function scrape(projectId: number, browser: Browser) {
       results,
       dateStart,
       dateFinal,
-      publicationDate,
-      completionDate,
+      // publicationDate, // TODO: to go
+      // completionDate, // TODO: to go
       status,
-      keywords
+      hyperlink
     };
     
     // NOTE: output reduced for better visualization
@@ -115,12 +115,39 @@ async function scrape(projectId: number, browser: Browser) {
     // console.log(memberAcademicRole);
 
     // TODO: collect keywords of programs
-    let firstKeyword = await page.$$eval('div.span3 > span', (key: any) => key[5].innerText);
-    let secondKeyword = await page.$$eval('div.span3 > span', (key: any) => key[7].innerText);
-    let thirdKeyword = await page.$$eval('div.span3 > span', (key: any) => key[9].innerText);
-    let fourthKeyword = await page.$$eval('div.span3 > span', (key: any) => key[11].innerText);
+    let keywords = await page.$$eval('div.span3 > span', (keys: any) => {
+      return [
+        keys[5].innerText,
+        keys[7].innerText,
+        keys[9].innerText,
+        keys[11].innerText,
+      ]
+    });
     
-    // console.log(`List [ ${firstKeyword}, ${secondKeyword}, ${thirdKeyword}, ${fourthKeyword}, ]`);
+    console.log(`${' '.repeat(6)}╰────`, JSON.stringify([...keywords]));
+
+    // TODO: If panel-title number x equals Cidades de atuacao
+    // TO DO: collect to list
+
+    let address = await page.$$eval('div.panel-title', (title: any) => title[5].innerText);
+    address = address.substring(1, address.length);
+    let region = [];
+
+    if (address === "Cidades de atuação") {
+
+      let datas = await page.$$eval('div.panel-content', (title: any) => title[5].innerText.split('\n'));
+
+      for (let i = 3; i > 2 && i < datas.length; i++) {
+        console.log(`${' '.repeat(6)}╰────`, datas[i].split('\t'));        
+      }
+
+      // // TODO: works, but not for a list of cities
+      // let lines = data.split('\n'); // TODO: split lines
+      // console.log(`Data: ${lines[3]}`);
+    } else {
+      // TODO: assume to be santa maria the null ones
+      console.log(`${' '.repeat(6)}╰────`, ['Not informed']);
+    }
 
     // TODO: collect members by pages
 
@@ -128,15 +155,15 @@ async function scrape(projectId: number, browser: Browser) {
 
     while (true) {
 
-      console.log(`"Processing tab ${tabPointer}"`);
+      // console.log(`"Processing tab ${tabPointer}"`); IMPORTANT
       await page.waitForSelector('.btn.detalhes');
       let detalhesButtons = await page.$$('.btn.detalhes');
 
       // TODO: pass through all buttons
       for (const button of detalhesButtons) {
 
-        await page.waitForTimeout(600);
-        console.log(`"Button ${detalhesButtons.indexOf(button)}"`);
+        await page.waitForTimeout(500); // timeout
+        // console.log(`"Button ${detalhesButtons.indexOf(button)}"`); IMPORTANT
 
         // TODO: open the modal
 
@@ -175,27 +202,28 @@ async function scrape(projectId: number, browser: Browser) {
         linkDisabled = disabledBtns[2]; // NOTE: Get the third disabled skip button.  
       }
 
-      console.log(nextTabsLink, linkDisabled);
+      // console.log(nextTabsLink, linkDisabled); IMPORTANT
 
+      // TODO: get member from modal
       await getMemberFromModal(page);
 
       // TODO: pass or break conditions
 
       // NOTE: got just one tab. Break to the next. (nextNotFound)
       if (nextTabsLink == null) {
-        warn('"Just one tab, break to the next URL"'); 
+        // warn('"Just one tab, break to the next URL"'); IMPORTANT
         break;
       }
       
       // NOTE: no more tabs. Break to the next; (currentIsLast)
       if (tabPointer > 1 && linkDisabled) {
-        warn('"Break to the next URL"'); 
+        // warn('"Break to the next URL"'); IMPORTANT
         break;
       }
 
       // NOTE: Found more Tabs. Iterate! (goToNextTab)
       if (nextTabsLink && tabPointer >= 1 && nextTabsLink) {
-        note('"Has next tab"');
+        // note('"Has next tab"'); IMPORTANT
         await page.evaluate((element: any) => element.click(), nextTabsLink); // Use await here
         tabPointer++;
       }
@@ -219,7 +247,7 @@ async function getMemberFromModal(page: any): Promise<void> {
   await page.waitForSelector('.modaljs-scroll-overlay');
   const deadModals = await page.$$('.modaljs-scroll-overlay');
 
-  console.log('Number of modals: ' + deadModals.length);
+  // console.log('Number of modals: ' + deadModals.length); IMPORTANT
 
   for (const modal of deadModals) {
 
@@ -245,10 +273,17 @@ async function getMemberFromModal(page: any): Promise<void> {
 
     const paragraphs = await modal.$$('div.modaljs-scroll-overlay p');
 
-    console.log('-'.repeat(100)); // NOTE: a divisor between members
-
-    const imageSource = await modal.$eval('div.modaljs-scroll-overlay .span3 img', (image: any) => image.src); 
-    console.log(`Image ${imageSource}`)
+    // console.log('-'.repeat(100)); // NOTE: a divisor between members
+    
+    try {
+      // NOTE: Get Base64 image source from modal if available
+      const base64Image = await modal.$eval('div.modaljs-scroll-overlay .span3 img', (image: any) => image.src); 
+      member.imageSource = base64Image.substring(0, 80); // NOTE: temporarely
+    } catch (error: any) {
+      // NOTE: If image not found, set empty string and note as icon
+      member.imageSource = null;
+      // note('Image is an icon'); IMPORTANT
+    }
 
     for (const p of paragraphs) {
 
@@ -258,12 +293,6 @@ async function getMemberFromModal(page: any): Promise<void> {
       if (value) {
         value = value.substring(1, value.lenght);
       }
-
-      // TODO: image hyperlink
-
-      // const name = await modal.$eval('div.modaljs-scroll-overlay p strong:nth-child(1)', (name: any) => name.innerText);
-      // console.log(key);
-      // NOTE: this is required. Some attributes are missing, and some are present.  
 
       switch (key) {
         case MemberDetails.Matricula:
@@ -306,7 +335,7 @@ async function getMemberFromModal(page: any): Promise<void> {
           member.valor = value.trim();
           break;
         default:
-          note(`Unknown key (possibly name): ${key}`);
+          // note(`Unknown key (possibly name): ${key}`);
           member.name = key.trim();
           break;
       }
@@ -337,10 +366,9 @@ async function getMemberFromModal(page: any): Promise<void> {
     // const data = { name, matricula , vinculo , situacao , email , curso , funcao , cargaHoraria, periodo, recebeBolsa };
     // data.matricula = getVal(data.matricula);
     // data.vinculo = getVal(data.vinculo);
-
     // console.log(data);
 
-    console.log(member);
+    // console.log(member); // NOTE: maintain
   }
 }
 
@@ -360,6 +388,4 @@ enum MemberDetails {
   Valor = 'Valor'
 }
 
-// NOTE: main function call
-
-main();
+main().catch((error: any) => console.log(error));
