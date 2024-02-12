@@ -6,12 +6,12 @@ const normalizator = (string: string) => {
   .replace("ç", "c");
 }
 
-async function main(): Promise<void> {
+async function test(): Promise<void> {
   const text = "Olá, como está você? Quer uma maçã?";
 
   console.log(normalizator(text));
 }
 
-main().catch((error: any) => console.log(error));
+test().catch((error: any) => console.log(error));
 
 // NOTE: 'maçã' and 'maca', are completely different words in portuguese
