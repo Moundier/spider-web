@@ -16,6 +16,7 @@ const close = () => {
 };
 
 const onClose = (runnable: any) => {
+  
   process.on('exit', runnable);
   process.on('SIGINT', runnable);
 };

@@ -1,9 +1,9 @@
 export interface Address {
-  educationalInstitution?: string;
-  campus?: string;
-  university?: string;
-  city?: string;
-  state?: string;
+  educationalInstitution?: string; // Politecnico
+  campus?: string; // Sede
+  university?: string; // UFSM
+  city?: string; // Santa Maria
+  state?: string; // 
   country?: string;
   zipCode?: string;
 }
