@@ -291,7 +291,7 @@ async function getMemberFromModal(page: any): Promise<void> {
       let [key, value]: any = text.split(':');
       
       if (value) {
-        value = value.substring(1, value.lenght);
+        value = value.substring(1, value.lenght); // TODO: Ignore the first character at postiion '0'
       }
 
       switch (key) {
