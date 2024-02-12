@@ -1,7 +1,7 @@
 export interface Address {
+  educationalInstitution?: string;
   campus?: string;
-  institution?: string;
-  // street?: string;
+  university?: string;
   city?: string;
   state?: string;
   country?: string;

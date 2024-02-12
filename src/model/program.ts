@@ -1,6 +1,7 @@
 export interface Program {
   programId: number; // unique 
-  imageSource?: string;
+  imageSource?: string | null;
+  domainImageSource: string | null;
   title: string | null;
   numberUnique?: string; // unique 
   classification: Classification;
@@ -10,10 +11,9 @@ export interface Program {
   results?: string | null;
   dateStart?: string | null;
   dateFinal?: string | null;
-  publicationDate?: string | null;
-  completionDate?: string | null;
   status: Status;
-  keywords?: Set<string>; // unique
+  // keywords?: Set<string>; // unique 'The assoc table handles the relation'
+  hyperlink: string,
 }
 
 enum Status {
