@@ -1,4 +1,5 @@
-import { Browser, ElementHandle, Page, launch } from 'puppeteer';
+import { Browser, ElementHandle, HTTPResponse, Page, launch } from 'puppeteer';
+import { setTimeout } from "node:timers/promises"
 import { now } from './utils/time';
 import { fail, done, note, warn } from './utils/todo'
 import { Program } from './model/program';
@@ -22,13 +23,13 @@ let memberAttributesInspector: Set<string> = new Set(); // MATRÍCULA, VÍNCULO,
 let memberAcademicRole: Set<string> = new Set(); //  Coordenador, Participante, Autor 
 
 async function scrape(projectId: number, browser: Browser) {
-  const page = await browser.newPage();
+  const page: Page = await browser.newPage();
 
   try {
-    const projectUrl = `${baseUrl}${projectId}`;
-    const response = await page.goto(projectUrl, { waitUntil: 'domcontentloaded' });
+    const projectUrl: string = `${baseUrl}${projectId}`;
+    const response: HTTPResponse | null = await page.goto(projectUrl, { waitUntil: 'domcontentloaded' });
 
-    const projectName = await page.$eval('title', (el: any) => el.textContent.trim());
+    const projectName: any = await page.$eval('title', (el: any) => el.textContent.trim());
 
     // TODO: inspect values and error returns
     const errorPill: ElementHandle<Element> | null = await page.$('.error.pill');
@@ -48,25 +49,25 @@ async function scrape(projectId: number, browser: Browser) {
     }
 
     // TODO: get panel titles
-    const panelTitles: string = await page.$$eval('.panel-title', (titles: any) => titles.map((title: any) => title.textContent.trim()));
+    // const panelTitles: string = await page.$$eval('.panel-title', (titles: any) => titles.map((title: any) => title.textContent.trim()));
   
-    for (const title of panelTitles) {
-      programPanelDataInspector.add(title);
-    }
+    // for (const title of panelTitles) {
+    //   programPanelDataInspector.add(title);
+    // }
 
     // TODO: get program
     let programId = null;
     let hyperlinkImage = null;
-    let title = await page.$$eval('div.span12 > span', (title: any) => title[1].innerText);
-    let numberUnique = await page.$$eval('div.span6 > span', (title: any) => title[1].innerText); 
-    let classification = await page.$$eval('div.span6 > span', (title: any) => title[4].innerText);
-    let summary = await page.$$eval('div.span12 > span', (title: any) => title[3].innerText); 
-    let objectives = await page.$$eval('div.span12 > span', (title: any) => title[5].innerText); 
-    let defense = await page.$$eval('div.span12 > span', (title: any) => title[7].innerText);  
-    let results = await page.$$eval('div.span12 > span', (title: any) => title[9].innerText); 
-    let dateStart = await page.$$eval('div.span3 > span', (title: any) => title[1].innerText);
-    let dateFinal = await page.$$eval('div.span3 > span', (title: any) => title[3].innerText);
-    let status = await page.$$eval('div.span6 > span', (title: any) => title[14].innerText);
+    let title = await page.$$eval('div.span12 > span', (element: any) => element[1].innerText);
+    let numberUnique = await page.$$eval('div.span6 > span', (element: any) => element[1].innerText); 
+    let classification = await page.$$eval('div.span6 > span', (element: any) => element[4].innerText);
+    let summary = await page.$$eval('div.span12 > span', (element: any) => element[3].innerText); 
+    let objectives = await page.$$eval('div.span12 > span', (element: any) => element[5].innerText); 
+    let defense = await page.$$eval('div.span12 > span', (element: any) => element[7].innerText);  
+    let results = await page.$$eval('div.span12 > span', (element: any) => element[9].innerText); 
+    let dateStart = await page.$$eval('div.span3 > span', (element: any) => element[1].innerText);
+    let dateFinal = await page.$$eval('div.span3 > span', (element: any) => element[3].innerText);
+    let status = await page.$$eval('div.span6 > span', (element: any) => element[14].innerText);
     // let keywords = new Set<string>();
 
     // TODO: collect hyperlink
@@ -97,6 +98,8 @@ async function scrape(projectId: number, browser: Browser) {
       status,
       hyperlink
     };
+
+    // TODO: save the program
     
     // NOTE: output reduced for better visualization
 
@@ -115,35 +118,38 @@ async function scrape(projectId: number, browser: Browser) {
     // console.log(memberAcademicRole);
 
     // TODO: collect keywords of programs
-    let keywords = await page.$$eval('div.span3 > span', (keys: any) => {
+    let keywords: any[] = await page.$$eval('div.span3 > span', (keys: any) => {
       return [
         keys[5].innerText,
         keys[7].innerText,
         keys[9].innerText,
         keys[11].innerText,
-      ]
+      ];
     });
+
+    // TODO: save the keywords
+    // TODO: save the program keywords associative table
     
     console.log(`${' '.repeat(6)}╰────`, JSON.stringify([...keywords]));
 
     // TODO: If panel-title number x equals Cidades de atuacao
     // TO DO: collect to list
 
-    let address = await page.$$eval('div.panel-title', (title: any) => title[5].innerText);
+    let address = await page.$$eval('div.panel-title', (element: any) => element[5].innerText);
     address = address.substring(1, address.length);
-    let region = [];
+    let region: string[] = [];
 
     if (address === "Cidades de atuação") {
 
-      let datas = await page.$$eval('div.panel-content', (title: any) => title[5].innerText.split('\n'));
+      let datas = await page.$$eval('div.panel-content', (element: any) => element[5].innerText.split('\n'));
 
       for (let i = 3; i > 2 && i < datas.length; i++) {
         console.log(`${' '.repeat(6)}╰────`, datas[i].split('\t'));        
       }
 
-      // // TODO: works, but not for a list of cities
-      // let lines = data.split('\n'); // TODO: split lines
-      // console.log(`Data: ${lines[3]}`);
+      // TODO: save the address
+      // TODO: save the program address associative table
+
     } else {
       // TODO: assume to be santa maria the null ones
       console.log(`${' '.repeat(6)}╰────`, ['Not informed']);
@@ -162,7 +168,7 @@ async function scrape(projectId: number, browser: Browser) {
       // TODO: pass through all buttons
       for (const button of detalhesButtons) {
 
-        await page.waitForTimeout(500); // timeout
+        await setTimeout(500); // timeout
         // console.log(`"Button ${detalhesButtons.indexOf(button)}"`); IMPORTANT
 
         // TODO: open the modal
@@ -207,7 +213,10 @@ async function scrape(projectId: number, browser: Browser) {
       // TODO: get member from modal
       await getMemberFromModal(page);
 
-      // TODO: pass or break conditions
+      // TODO: save member list 
+      // TODO: save program member associative table
+
+      // NOTE: pass or break conditions
 
       // NOTE: got just one tab. Break to the next. (nextNotFound)
       if (nextTabsLink == null) {
@@ -242,7 +251,7 @@ function getKey(string: string) {
   return value;
 };
 
-async function getMemberFromModal(page: any): Promise<void> {
+async function getMemberFromModal(page: Page): Promise<void> {
 
   await page.waitForSelector('.modaljs-scroll-overlay');
   const deadModals = await page.$$('.modaljs-scroll-overlay');
@@ -340,6 +349,7 @@ async function getMemberFromModal(page: any): Promise<void> {
           break;
       }
 
+
       if (paragraphs.indexOf(p) > 0) {
         // TODO: add to set
         memberAttributesInspector.add(getKey(text)); 
@@ -352,6 +362,11 @@ async function getMemberFromModal(page: any): Promise<void> {
         }
       }
     }
+
+    // TODO: save member
+    // TODO: save program member associative table
+
+    return;
 
     // const matricula = await modal.$eval('div.modaljs-scroll-overlay p:nth-child(2)', strong => strong.innerText); // TODO: implement getVal
     // const vinculo = await modal.$eval('div.modaljs-scroll-overlay p:nth-child(3)', strong => strong.innerText);
@@ -388,4 +403,4 @@ enum MemberDetails {
   Valor = 'Valor'
 }
 
-main().catch((error: any) => console.log(error));
+main().catch((error: unknown) => { console.log(error); });
