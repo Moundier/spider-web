@@ -27,7 +27,7 @@ async function scrape(projectId: number, browser: Browser) {
 
   try {
     const projectUrl: string = `${baseUrl}${projectId}`;
-    const response: HTTPResponse | null = await page.goto(projectUrl, { waitUntil: 'domcontentloaded' });
+    const response: (HTTPResponse | null) = await page.goto(projectUrl, { waitUntil: 'domcontentloaded' });
 
     const projectName: any = await page.$eval('title', (el: any) => el.textContent.trim());
 
