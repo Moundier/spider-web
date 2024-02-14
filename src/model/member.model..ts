@@ -1,10 +1,10 @@
-enum AcademicRole {
+export enum AcademicRole {
   DOCENTE = "Faculty",
   DISCENTE = "Student",
   ADMINISTRATIVO = "Administrative staff"
 }
 
-enum MemberRole {
+export enum MemberRole {
   QUALQUER_FUNCAO = "",
   COORDENADOR = "Coordenador",
   ORIENTADOR = "Orientador",
@@ -31,7 +31,7 @@ enum MemberRole {
   COORDENADOR_ADMINISTRATIVO = "Coordenador Administrativo"
 }
 
-interface Member {
+export interface MemberModel {
   memberId: number | null; // member
   name: string | null; // member
   matricula: string | null; // // member unique

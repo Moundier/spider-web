@@ -1,16 +1,18 @@
-import { Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
-import { Program } from "../program";
-import { Keyword } from "../keyword";
+import { Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, Unique } from "typeorm";
+import { ProgramEntity } from "../program";
+import { KeywordEntity } from "../keyword";
 
-@Entity()
+@Entity({ name:'program_keyword' })
 export class ProgramToKeyword {
 
   @PrimaryGeneratedColumn()
   id?: number;
 
-  @ManyToOne(() => Program, { onDelete: "CASCADE" })
-  program?: Program;
+  @ManyToOne(() => ProgramEntity, { onDelete: "CASCADE" })
+  @JoinColumn({ name: 'programId' })
+  program?: ProgramEntity;
 
-  @ManyToOne(() => Keyword, { onDelete: "CASCADE" })
-  keyword?: Keyword;
+  @ManyToOne(() => KeywordEntity, { onDelete: "CASCADE" })
+  @JoinColumn({ name: 'keywordId' })
+  keyword?: KeywordEntity;
 }

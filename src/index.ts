@@ -2,11 +2,33 @@ import { Browser, ElementHandle, HTTPResponse, Page, launch } from 'puppeteer';
 import { setTimeout } from "node:timers/promises"
 import { now } from './utils/time';
 import { fail, done, note, warn } from './utils/todo'
-import { Program } from './model/program';
+import { Program } from './model/program.model';
+import { MemberModel } from './model/member.model.';
+import { ProgramEntity } from './entity/program';
+import datasource from './config/datasource';
+import { DataSource, Repository, getRepository } from 'typeorm';
+import { MemberEntity } from './entity/member';
+import { KeywordEntity } from './entity/keyword';
+import { AddressEntity } from './entity/address';
+import { ProgramToMember } from './entity/join/program_to_member';
+import { ProgramToKeyword } from './entity/join/program_to_keyword';
+import { ProgramToAddress } from './entity/join/program_to_address';
 
 const baseUrl = 'https://portal.ufsm.br/projetos/publico/projetos/view.html?idProjeto=';
 
+async function databaseConnection(): Promise<void> {
+  try {
+    let source: DataSource = await datasource.initialize();
+    if (datasource.isInitialized) console.log("DataSource: connected to database");
+  } catch (error: unknown) {
+    if (error instanceof Error) console.error("Stack trace:", error.stack);
+    process.exit(1);
+  }
+}
+
 async function main(): Promise<void> {
+
+  await databaseConnection();
 
   const browser = await launch({ headless: false });
   for (let projectId = 74451; projectId >= 0; projectId--) { // 74584 top 74502 test 74510 test2 ERROR: 74449 
@@ -15,6 +37,21 @@ async function main(): Promise<void> {
 
   return await browser.close();
 }
+
+function handleError(error: any) {
+  if (error.code === '23505') {
+    warn(`${error.detail}`);
+  } 
+}
+
+const programRepo: Repository<ProgramEntity> = datasource.getRepository(ProgramEntity);
+const keywordRepo: Repository<KeywordEntity> = datasource.getRepository(KeywordEntity);
+const addressRepo: Repository<AddressEntity> = datasource.getRepository(AddressEntity);
+const memberRepo: Repository<MemberEntity> = datasource.getRepository(MemberEntity);
+
+const programHasMemberRepo: Repository<ProgramToMember> = datasource.getRepository(ProgramToMember);
+const programKeywordRepo: Repository<ProgramToKeyword> = datasource.getRepository(ProgramToKeyword);
+const programHasAddressRepo: Repository<ProgramToAddress> = datasource.getRepository(ProgramToAddress);
 
 let programPanelDataInspector: Set<string> = new Set(); // Dados Basicos, Inovacao e gesto financeira, Classificacoes, Participantes, Orgaos, Cidades de atuacao, Publico Alvo, Plano de Trabalho
 let programClassificInspector: Set<string> = new Set(); // ENSINO, PESQUISA, EXTENSAO, DESENVOLVIMENTO_INSTITUCIOAL,
@@ -26,7 +63,7 @@ async function scrape(projectId: number, browser: Browser) {
   const page: Page = await browser.newPage();
 
   try {
-    const projectUrl: string = `${baseUrl}${projectId}`;
+    const projectUrl: string = `${baseUrl}${projectId}`.toString();
     const response: (HTTPResponse | null) = await page.goto(projectUrl, { waitUntil: 'domcontentloaded' });
 
     const projectName: any = await page.$eval('title', (el: any) => el.textContent.trim());
@@ -50,7 +87,7 @@ async function scrape(projectId: number, browser: Browser) {
 
     // TODO: get panel titles
     // const panelTitles: string = await page.$$eval('.panel-title', (titles: any) => titles.map((title: any) => title.textContent.trim()));
-  
+
     // for (const title of panelTitles) {
     //   programPanelDataInspector.add(title);
     // }
@@ -59,19 +96,15 @@ async function scrape(projectId: number, browser: Browser) {
     let programId = null;
     let hyperlinkImage = null;
     let title = await page.$$eval('div.span12 > span', (element: any) => element[1].innerText);
-    let numberUnique = await page.$$eval('div.span6 > span', (element: any) => element[1].innerText); 
+    let numberUnique = await page.$$eval('div.span6 > span', (element: any) => element[1].innerText);
     let classification = await page.$$eval('div.span6 > span', (element: any) => element[4].innerText);
-    let summary = await page.$$eval('div.span12 > span', (element: any) => element[3].innerText); 
-    let objectives = await page.$$eval('div.span12 > span', (element: any) => element[5].innerText); 
-    let defense = await page.$$eval('div.span12 > span', (element: any) => element[7].innerText);  
-    let results = await page.$$eval('div.span12 > span', (element: any) => element[9].innerText); 
+    let summary = await page.$$eval('div.span12 > span', (element: any) => element[3].innerText);
+    let objectives = await page.$$eval('div.span12 > span', (element: any) => element[5].innerText);
+    let defense = await page.$$eval('div.span12 > span', (element: any) => element[7].innerText);
+    let results = await page.$$eval('div.span12 > span', (element: any) => element[9].innerText);
     let dateStart = await page.$$eval('div.span3 > span', (element: any) => element[1].innerText);
     let dateFinal = await page.$$eval('div.span3 > span', (element: any) => element[3].innerText);
     let status = await page.$$eval('div.span6 > span', (element: any) => element[14].innerText);
-    // let keywords = new Set<string>();
-
-    // TODO: collect hyperlink
-    const hyperlink = projectUrl; // NOTE: repeated
 
     // TODO: set of status
     programClassificInspector.add(classification);
@@ -93,22 +126,37 @@ async function scrape(projectId: number, browser: Browser) {
       results,
       dateStart,
       dateFinal,
-      // publicationDate, // TODO: to go
-      // completionDate, // TODO: to go
       status,
-      hyperlink
+      hyperlink: projectUrl
     };
+      
+    // TODO: save the program entity
+    let programEntity: ProgramEntity = programToEntity(program);
 
-    // TODO: save the program
-    
+    try {
+      const foundProgram = await programRepo.findOne({ where: { numberUnique: programEntity.numberUnique } });
+
+      if (foundProgram) {
+        programEntity = foundProgram;
+        console.log(`Id: ` + foundProgram.programId);
+      }
+
+      if (foundProgram === null) {
+        await programRepo.save(programEntity); // TODO: If not found, save program
+      }
+
+    } catch (error: any) {
+      console.log('Entity (Program) error');
+      handleError(error);
+    }
+
     // NOTE: output reduced for better visualization
-
     program.title = program.title ? program.title.substring(0, 50) : null;
     program.summary = program.summary ? program.summary.substring(0, 50) : null;
-    program.objectives = program.objectives ? program.objectives.substring(0, 50) : null; 
-    program.defense = program.defense ?  program.defense.substring(0, 50) : null;
+    program.objectives = program.objectives ? program.objectives.substring(0, 50) : null;
+    program.defense = program.defense ? program.defense.substring(0, 50) : null;
     program.results = program.results ? program.results.substring(0, 50) : null;
-    
+
     // TODO: program inspections
     // console.log(program); 
     // console.log(programPanelDataInspector);
@@ -127,35 +175,92 @@ async function scrape(projectId: number, browser: Browser) {
       ];
     });
 
-    // TODO: save the keywords
-    // TODO: save the program keywords associative table
-    
-    console.log(`${' '.repeat(6)}╰────`, JSON.stringify([...keywords]));
+    // TODO: save program keywords (saves if doesnt exist, and associates if not already associated)
+    for (const keyword of keywords) {
 
-    // TODO: If panel-title number x equals Cidades de atuacao
-    // TO DO: collect to list
+      const program_to_keyword = new ProgramToKeyword();
+      program_to_keyword.program = programEntity;
 
+      let keywordEntity: KeywordEntity = { keywordName: keyword };
+      let foundKeyword;
+
+      try {
+        foundKeyword = await keywordRepo.findOne({ where: { keywordName: keyword } });
+      } catch (error: any) {
+        console.log('Find keyword error');
+        handleError(error);
+      }
+
+      try {
+        if (foundKeyword === null) {
+          console.log(`Didnt exists ${keywordEntity.keywordName}`);
+          await keywordRepo.save(keywordEntity); // TODO: Save keyword, if not found        
+        } else {
+          console.log(`Already exist '${keywordEntity.keywordName}'`);
+        }
+      } catch (error: any) {
+        console.log('Save keyword error');
+        handleError(error);
+      }
+
+      program_to_keyword.keyword = keywordEntity;
+
+      if (foundKeyword) {
+        // TODO: save to an already existing (required)
+        program_to_keyword.keyword = foundKeyword;
+      }
+
+      // TODO: does an association already exists
+      const associationExists = await programKeywordRepo.findOne({ where: { program: programEntity, keyword: keywordEntity } });
+
+      console.log(programEntity.programId, keywordEntity.keywordName)
+
+      if (associationExists) {
+        console.log('Association already exists');
+        continue; // TODO: goes to next iteration it relation already exists
+      }
+
+      try {
+        await programKeywordRepo.save(program_to_keyword); // TODO: save keyword to program        
+      } catch (error: any) {
+        console.log(`Error saving association: ${error.message}`);
+      }
+    }
+
+    // -------------------------
+
+    // TODO: keywords of programs
+    const keys = `${' '.repeat(6)}╰─── ${JSON.stringify([...keywords])}`;
+    console.log(keys);
+
+    // TODO: address of programs
     let address = await page.$$eval('div.panel-title', (element: any) => element[5].innerText);
     address = address.substring(1, address.length);
     let region: string[] = [];
 
-    if (address === "Cidades de atuação") {
+    // TODO: ternary expression for regions (Either data or null)
+    let datas: ([] | any) = (address === "Cidades de atuação")
+      ? await page.$$eval('div.panel-content', (element: any) => element[5].innerText.split('\n'))
+      : null;
 
-      let datas = await page.$$eval('div.panel-content', (element: any) => element[5].innerText.split('\n'));
+    for (let i = 0; datas === null || i < datas.length; i++) {
 
-      for (let i = 3; i > 2 && i < datas.length; i++) {
-        console.log(`${' '.repeat(6)}╰────`, datas[i].split('\t'));        
+      if (datas === null) {
+        console.log(`Cidades: `)
+        console.log(`${' '.repeat(6)}╰───`, ['Not informed']);
+        break;
       }
 
-      // TODO: save the address
-      // TODO: save the program address associative table
-
-    } else {
-      // TODO: assume to be santa maria the null ones
-      console.log(`${' '.repeat(6)}╰────`, ['Not informed']);
+      // NOTE: The third column contains the actual regions 
+      if (datas.indexOf(datas[i]) >= 3) {
+        console.log(`Cidades: `);
+        console.log(`${' '.repeat(6)}╰───`, datas[i].split('\t'));
+        // TODO: save the address
+        // TODO: save the program address associative table
+      }
     }
 
-    // TODO: collect members by pages
+    // console.log(datas)
 
     let tabPointer = 1;
 
@@ -165,16 +270,15 @@ async function scrape(projectId: number, browser: Browser) {
       await page.waitForSelector('.btn.detalhes');
       let detalhesButtons = await page.$$('.btn.detalhes');
 
-      // TODO: pass through all buttons
+      // TODO: Async Open and Close Modals
       for (const button of detalhesButtons) {
 
         await setTimeout(500); // timeout
         // console.log(`"Button ${detalhesButtons.indexOf(button)}"`); IMPORTANT
 
-        // TODO: open the modal
-
         try {
-          await button.click();
+          // TODO: also while loop here to make it even faster
+          await button.click(); /// TODO: Open the modal
         } catch (error: any) {
           fail('Failure on modal open: ' + error.message);
         }
@@ -186,44 +290,37 @@ async function scrape(projectId: number, browser: Browser) {
           let lastCloseButton: any = null;
 
           while (lastCloseButton === null || lastCloseButton === undefined || !(await lastCloseButton.isIntersectingViewport())) {
-            await page.waitForSelector('.close');
             closeButtons = await page.$$('.close');
-            const lastIndex = closeButtons.length - 1;
+            const lastIndex: number = closeButtons.length - 1;
             lastCloseButton = closeButtons[lastIndex];
           }
-        
-          await lastCloseButton.click();
 
+          await lastCloseButton.click();
         } catch (error: any) {
           fail('Button (Close): ' + error.message);
         }
       }
 
-      // NOTE: goes to next page of members
-      let linkDisabled;
-      const nextTabsLink: any = await page.$('li a[title="Próxima página"]');
-      const disabledBtns: any = await page.$$('.disabled');
+      const nextTabsLink: ElementHandle<Element> | null = await page.$('li a[title="Próxima página"]');
+      const disabledBtns: ElementHandle<Element>[] | null = await page.$$('.disabled');
+      const linkDisabled: ElementHandle<Element> = disabledBtns[2]; // NOTE: Obtain third inactive skip button. (0, 1, 2)
 
-      if (disabledBtns >= 3) {
-        linkDisabled = disabledBtns[2]; // NOTE: Get the third disabled skip button.  
+      let members: MemberModel[] | null = await getMemberFromModal(page);
+      for (const m of members ?? []) {
+        // TODO: save each member entity
+        // TODO: program to member assoc_program_member(memberId, programId)
       }
 
-      // console.log(nextTabsLink, linkDisabled); IMPORTANT
+      // console.log(members);
 
-      // TODO: get member from modal
-      await getMemberFromModal(page);
-
-      // TODO: save member list 
-      // TODO: save program member associative table
-
-      // NOTE: pass or break conditions
+      // NOTE: break or pass to next page of members
 
       // NOTE: got just one tab. Break to the next. (nextNotFound)
       if (nextTabsLink == null) {
         // warn('"Just one tab, break to the next URL"'); IMPORTANT
         break;
       }
-      
+
       // NOTE: no more tabs. Break to the next; (currentIsLast)
       if (tabPointer > 1 && linkDisabled) {
         // warn('"Break to the next URL"'); IMPORTANT
@@ -237,7 +334,6 @@ async function scrape(projectId: number, browser: Browser) {
         tabPointer++;
       }
     }
-
   } catch (error: any) {
     fail(`Error scraping project ${projectId}: ${error.message}`);
   } finally {
@@ -251,17 +347,35 @@ function getKey(string: string) {
   return value;
 };
 
-async function getMemberFromModal(page: Page): Promise<void> {
+function programToEntity(program: Program): ProgramEntity {
+  const entity = new ProgramEntity();
+  entity.programId = program.programId;
+  entity.imageSource = program.imageSource ?? null;
+  entity.domainImageSource = program.domainImageSource;
+  entity.title = program.title;
+  entity.numberUnique = program.numberUnique ?? '';
+  entity.classification = program.classification;
+  entity.summary = program.summary ?? null;
+  entity.objectives = program.objectives ?? null;
+  entity.defense = program.defense ?? null;
+  entity.results = program.results ?? null;
+  entity.dateStart = program.dateStart ?? null;
+  entity.dateFinal = program.dateFinal ?? null;
+  entity.status = program.status;
+  entity.hyperlink = program.hyperlink;
+  return entity;
+}
 
-  await page.waitForSelector('.modaljs-scroll-overlay');
-  const deadModals = await page.$$('.modaljs-scroll-overlay');
+async function getMemberFromModal(page: Page): Promise<MemberModel[] | null> {
 
-  // console.log('Number of modals: ' + deadModals.length); IMPORTANT
+  // await page.waitForSelector('.modaljs-scroll-overlay');
+  const deadModals: ElementHandle<Element>[] = await page.$$('.modaljs-scroll-overlay');
+  const members: MemberModel[] = [];
 
   for (const modal of deadModals) {
 
-    // NOTE: must be null here. If not, it inherits incorrectly the previous member attributes
-    let member: Member = {
+    // NOTE: Must be inner loop.
+    let member: MemberModel = {
       memberId: null,
       name: null,
       matricula: null,
@@ -271,34 +385,29 @@ async function getMemberFromModal(page: Page): Promise<void> {
       imageSource: null,
       lotacaoExercicio: null,
       lotacaoOficial: null,
-      memberRole: null,
-      cargaHoraria: null,
-      periodo: null,
-      recebeBolsa: null,
+      memberRole: null, // TODO: to go
+      cargaHoraria: null, // TODO: to go
+      periodo: null, // TODO: to go
+      recebeBolsa: null, // TODO: to go
       curso: null,
-      bolsa: null,
-      valor: null
+      bolsa: null, // TODO: to go
+      valor: null  // TODO: to go
     };
 
     const paragraphs = await modal.$$('div.modaljs-scroll-overlay p');
 
-    // console.log('-'.repeat(100)); // NOTE: a divisor between members
-    
     try {
-      // NOTE: Get Base64 image source from modal if available
-      const base64Image = await modal.$eval('div.modaljs-scroll-overlay .span3 img', (image: any) => image.src); 
+      const base64Image = await modal.$eval('div.modaljs-scroll-overlay .span3 img', (image: any) => image.src);
       member.imageSource = base64Image.substring(0, 80); // NOTE: temporarely
-    } catch (error: any) {
-      // NOTE: If image not found, set empty string and note as icon
-      member.imageSource = null;
-      // note('Image is an icon'); IMPORTANT
+    } catch (error: unknown) {
+      member.imageSource = null; // NOTE: It's an icon tag
     }
 
     for (const p of paragraphs) {
 
       const text = await p.evaluate((el: any) => el.innerText);
       let [key, value]: any = text.split(':');
-      
+
       if (value) {
         value = value.substring(1, value.lenght); // TODO: Ignore the first character at postiion '0'
       }
@@ -349,10 +458,9 @@ async function getMemberFromModal(page: Page): Promise<void> {
           break;
       }
 
-
       if (paragraphs.indexOf(p) > 0) {
         // TODO: add to set
-        memberAttributesInspector.add(getKey(text)); 
+        memberAttributesInspector.add(getKey(text));
 
         // NOTE: inspect keys and values
         // console.log(`index: ${paragraphs.indexOf(p)} key: ${key}, val: ${value}`);
@@ -365,8 +473,6 @@ async function getMemberFromModal(page: Page): Promise<void> {
 
     // TODO: save member
     // TODO: save program member associative table
-
-    return;
 
     // const matricula = await modal.$eval('div.modaljs-scroll-overlay p:nth-child(2)', strong => strong.innerText); // TODO: implement getVal
     // const vinculo = await modal.$eval('div.modaljs-scroll-overlay p:nth-child(3)', strong => strong.innerText);
@@ -383,8 +489,18 @@ async function getMemberFromModal(page: Page): Promise<void> {
     // data.vinculo = getVal(data.vinculo);
     // console.log(data);
 
+    console.log('-'.repeat(100)); // NOTE: a divisor between members
     // console.log(member); // NOTE: maintain
+    // get the saved program 
+    // save association with each
+
+    members.push(member);
+    // return member;
   }
+
+  // console.log(members);
+
+  return members;
 }
 
 enum MemberDetails {

@@ -20,6 +20,7 @@ Puppeteer is a Node.js library for browser automation via the DevTools Protocol,
 - `typeorm`: not only boilerplate, but also 
 - `tsx`
 - `nodemon`: used for hot reloading
+- `express`: restful
 
 ## Quick Start
 1. Generate `package-lock.json` with `npx npm init -y`
@@ -41,8 +42,9 @@ Puppeteer is a Node.js library for browser automation via the DevTools Protocol,
 - [x] to do: member image source/hyperlink
 - [x] to do: member images are optional
 - [x] to do: program addresses are optional
-- [ ] to do: classes to entities 
-- [ ] to do: save to database
+- [x] to do: classes to entities 
+- [x] to do: save to database
+- [ ] to do: dont save whenver it is 'not informed or null data'
 
 - [ ] to do: question: where departaments (individually) are localized?
 - [ ] to do: question: remove specific characters from keywords and regions?
@@ -50,12 +52,10 @@ Puppeteer is a Node.js library for browser automation via the DevTools Protocol,
 
 ### Ideas Assemble
 - Youtube Shorts similar Main Page
+- Random Base64 Image Placeholder [Hyperlink](https://picsum.photos/500/300?blur=10)
 - Recommendations (Item-based, User-based, Content-based, Region-based)
 - Interactions System
 - Achievements System (Interactions, Time-use, Personal-profile)
-
-### Base64 Image Placeholder
-data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAAEECAYAAABtBXvlAAAB9ElEQVR42u3TQQEAQAQAsFPkmssjk58CNNg6LH5WP2AVgoAgIAgIAoKAICAICAKCgCCAICAICAKCgCAgCAgCgoAgIIggIAgIAoKAICAICAKCgCAgCCAICAKCgCAgCAgCgoAgIAgIAggCgoAgIAgIAoKAICAICAIIAoKAICAICAKCgCAgCAgCggCCgCAgCAgCgoAgIAgIAoIAgoAgIAgIAoKAICAICAKCgCCAICAICAKCgCAgCAgCgoAgIIggIAgIAoKAICAICAKCgCAgCCAICAKCgCAgCAgCgoAgIAgIIggIAoKAICAICAKCgCAgCAgCCAKCgCAgCAgCgoAgIAgIAoIAgoAgIAgIAoKAICAICAKCAIKAICAICAKCgCAgCAgCgoAggCAgCAgCgoAgIAgIAoKAIIAgIAgIAoKAICAICAKCgCAgCCAICAKCgCAgCAgCgoAgIAgIIggIAoKAICAICAKCgCAgCAgCCAKCgCAgCAgCgoAgIAgIAoIIAoKAICAICAKCgCAgCAgCggCCgCAgCAgCgoAgIAgIAoKAIIAgIAgIAoKAICAICAKCgCCAICAICAKCgCAgCAgCgoAgIAggCAgCgoAgIAgIAoKAICAIIAgIAoKAICAICAKCgCAgCAgCCAKCgCAgCAgCgoAgIAgIAoIIArcBiXqGDyWb29sAAAAASUVORK5CYII=
 
 ### Note
 - https://portal.ufsm.br/projetos/publico/projetos/view.html?idProjeto=74498 
@@ -67,3 +67,14 @@ data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAAEECAYAAABtBXvlAAAB9ElEQVR42u
 - https://portal.ufsm.br/projetos/publico/projetos/view.html?idProjeto=73572
 - https://portal.ufsm.br/projetos/publico/projetos/view.html?idProjeto=74291
 - https://portal.ufsm.br/projetos/publico/projetos/view.html?idProjeto=74367
+
+### Queries
+
+1. Get all keywords linked to project id
+```sql
+SELECT "keywordName" 
+FROM keyword, program, program_keyword 
+WHERE program."programId" = program_keyword."programId" 
+AND keyword."keywordId" = program_keyword."keywordId"
+AND program."programId" = 281;
+```

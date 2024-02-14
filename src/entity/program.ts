@@ -1,48 +1,48 @@
 import { Entity, PrimaryGeneratedColumn, Column, BaseEntity } from 'typeorm'
 
 @Entity({ name: 'program' })
-export class Program extends BaseEntity {
+export class ProgramEntity extends BaseEntity {
 
   @PrimaryGeneratedColumn()
-  programId!: number;
+  programId!: number | null;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, type: 'varchar' })
   imageSource!: string | null;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, type: 'varchar' })
   domainImageSource!: string | null;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, type: 'varchar' })
   title!: string | null;
 
-  @Column({ unique: true })
+  @Column({ unique: true, type: 'varchar' })
   numberUnique!: string;
 
-  @Column({ default: 'DEFAULT' })
+  @Column({ default: 'DEFAULT', type: 'varchar' })
   classification!: Classification;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, type: 'varchar' })
   summary!: string | null;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, type: 'varchar' })
   objectives!: string | null;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, type: 'varchar' })
   defense!: string | null;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, type: 'varchar' })
   results!: string | null;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, type: 'varchar' })
   dateStart!: string | null;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, type: 'varchar' })
   dateFinal!: string | null;
 
-  @Column({ default: 'DEFAULT' })
+  @Column({ default: 'DEFAULT', type: 'varchar' })
   status!: Status;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, type: 'varchar' })
   hyperlink!: string;
 }
 

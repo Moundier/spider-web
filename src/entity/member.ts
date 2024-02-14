@@ -1,54 +1,54 @@
 import { Entity, PrimaryGeneratedColumn, Column, BaseEntity } from 'typeorm'
 
 @Entity({ name: 'member' })
-export class Member extends BaseEntity {
+export class MemberEntity extends BaseEntity {
 
   @PrimaryGeneratedColumn()
-  memberId!: number;
+  memberId!: number | null;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, type: 'varchar' })
   name!: string | null;
 
-  @Column({ nullable: true, unique: true })
+  @Column({ nullable: true, unique: true, type: 'varchar' })
   matricula!: string | null;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, type: 'varchar' })
   vinculo!: AcademicRole | null;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, type: 'varchar' })
   vinculoStatus!: string | null;
 
-  @Column({ nullable: true, unique: true })
+  @Column({ nullable: true, unique: true, type: 'varchar' })
   email!: string | null;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, type: 'varchar' })
   imageSource!: string | null;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, type: 'varchar' })
   lotacaoExercicio!: string | null;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, type: 'varchar' })
   lotacaoOficial!: string | null;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, type: 'varchar' })
   memberRole!: MemberRole | null; // NOTE: to go
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, type: 'varchar' })
   cargaHoraria!: string | null; // NOTE: to go
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, type: 'varchar' })
   periodo!: string | null; // NOTE: to go
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, type: 'varchar' })
   recebeBolsa!: string | null; // NOTE: to go
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, type: 'varchar' })
   curso!: string | null;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, type: 'varchar' })
   bolsa!: string | null; // NOTE: to go
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, type: 'varchar' })
   valor!: string | null; // NOTE: to go
 }
 

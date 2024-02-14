@@ -1,36 +1,39 @@
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
-import { Program } from "../program";
-import { Member } from "../member";
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, Unique } from "typeorm";
+import { ProgramEntity } from "../program";
+import { MemberEntity } from "../member";
+import { MemberRole } from "../../model/member.model.";
 
-@Entity({ name:'program_address' })
-export class ProgramHasAddress {
+@Entity({ name:'program_member' })
+export class ProgramToMember {
 
   // NOTE: This should be in program to memeber 
 
   @PrimaryGeneratedColumn()
   id?: number;
 
-  @ManyToOne(() => Program, { onDelete: "CASCADE" })
-  program?: Program;
+  @ManyToOne(() => ProgramEntity, { onDelete: "CASCADE" })
+  @JoinColumn({ name: 'programId' })
+  program?: ProgramEntity;
 
-  @ManyToOne(() => Member, { onDelete: "CASCADE" })
-  member?: Member;
+  @ManyToOne(() => MemberEntity, { onDelete: "CASCADE" })
+  @JoinColumn({ name: 'memberId' })
+  member?: MemberEntity;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, type: 'varchar' })
   memberRole!: MemberRole | null; // NOTE: to go
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, type: 'varchar' })
   cargaHoraria!: string | null; // NOTE: to go
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, type: 'varchar' })
   periodo!: string | null; // NOTE: to go
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, type: 'varchar' })
   recebeBolsa!: string | null; // NOTE: to go
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, type: 'varchar' })
   bolsa!: string | null; // NOTE: to go
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, type: 'varchar' })
   valor!: string | null; // NOTE: to go
 }

@@ -1,7 +1,4 @@
 import { launch } from 'puppeteer';
-import { now } from '../src/utils/time';
-import { fail, done, note, warn } from '../src/utils/todo'
-
 
 const URL_TEMPLATE = "https://portal.ufsm.br/projetos/publico/projetos/view.html?idProjeto=%d";
 let onStart: any;
@@ -16,7 +13,6 @@ const close = () => {
 };
 
 const onClose = (runnable: any) => {
-  
   process.on('exit', runnable);
   process.on('SIGINT', runnable);
 };

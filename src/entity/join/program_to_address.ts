@@ -1,16 +1,18 @@
-import { Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
-import { Program } from "../program";
-import { Address } from "../address";
+import { Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { ProgramEntity } from "../program";
+import { AddressEntity } from "../address";
 
-@Entity()
-export class ProgramToKeyword {
+@Entity({ name:'program_address' })
+export class ProgramToAddress {
 
   @PrimaryGeneratedColumn()
   id?: number;
 
-  @ManyToOne(() => Program, { onDelete: "CASCADE" })
-  program?: Program;
+  @ManyToOne(() => ProgramEntity, { onDelete: "CASCADE" })
+  @JoinColumn({ name: 'programId' })
+  program?: ProgramEntity;
 
-  @ManyToOne(() => Address, { onDelete: "CASCADE" })
-  address?: Address;
+  @ManyToOne(() => AddressEntity, { onDelete: "CASCADE" })
+  @JoinColumn({ name: 'addressId' })
+  address?: AddressEntity;
 }
