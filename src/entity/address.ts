@@ -4,41 +4,41 @@ import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 export class AddressEntity {
 
   @PrimaryGeneratedColumn()
-  addressId?: number; // ****
+  addressId?: number | null; // ****
 
   @Column({ nullable: true, unique: false, type: 'varchar' }) // TODO: Unique
-  institutionUnit?: string; // NOTE: politecnico
+  institutionUnit?: string | null; // NOTE: politecnico
 
   @Column({ nullable: true, unique: true, type: 'varchar' }) // TODO: Unique
-  campus?: string; // sede
+  campus?: string | null; // sede
 
   @Column({ nullable: true, unique: false, type: 'varchar' }) // TODO: Unique
-  university?: string; // federal university of santa maria
+  university?: string | null; // federal university of santa maria
 
   @Column({ nullable: true, unique: true, type: 'varchar' }) // TODO: Unique
-  abbreviation?: string; // ufsm
+  abbreviation?: string | null; // ufsm
 
   @Column({ nullable: true, unique: false, type: 'varchar' })
-  street?: string; // roraima
+  street?: string | null; // roraima
 
   @Column({ nullable: true, unique: false, type: 'varchar' })
-  number?: string; // 1000
+  number?: string | null; // 1000
 
   @Column({ nullable: true, unique: false, type: 'varchar' })
-  complement?: string;
+  complement?: string | null;
   
   @Column({ nullable: true, unique: false, type: 'varchar' })
-  zipCode?: string; // xxxxxxxx
+  zipCode?: string | null; // xxxxxxxx
 
   @Column({ nullable: true, unique: false, type: 'varchar' })
-  district?: string; // camobi
+  district?: string | null; // camobi
 
   @Column({ nullable: true, unique: false, type: 'varchar' })
-  city?: string; // santa maria
+  city?: string | null; // santa maria
   
   @Column({ nullable: true, unique: false, type: 'varchar' })
-  state?: string; // rio grande do sul
+  state?: string | null; // rio grande do sul
   
   @Column({ nullable: true, unique: false, type: 'varchar' })
-  country?: string; // brazil
+  country?: string | null; // brazil
 }
