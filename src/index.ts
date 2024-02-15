@@ -6,7 +6,7 @@ import { Program } from './model/program.model';
 import { MemberModel } from './model/member.model.';
 import { ProgramEntity } from './entity/program';
 import datasource from './config/datasource';
-import { DataSource, Repository, getRepository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { MemberEntity } from './entity/member';
 import { KeywordEntity } from './entity/keyword';
 import { AddressEntity } from './entity/address';
@@ -31,7 +31,7 @@ async function main(): Promise<void> {
   await databaseConnection();
 
   const browser = await launch({ headless: false });
-  for (let projectId = 74451; projectId >= 0; projectId--) { // 74584 top 74502 test 74510 test2 ERROR: 74449 
+  for (let projectId = 73572; projectId >= 0; projectId--) { // 74584 top 74451 test, 
     await scrape(projectId, browser);
   }
 
@@ -175,7 +175,7 @@ async function scrape(projectId: number, browser: Browser) {
       ];
     });
 
-    // TODO: save program keywords (saves if doesnt exist, and associates if not already associated)
+    // TODO: save program keyword's
     for (const keyword of keywords) {
 
       const program_to_keyword = new ProgramToKeyword();
@@ -193,10 +193,10 @@ async function scrape(projectId: number, browser: Browser) {
 
       try {
         if (foundKeyword === null) {
-          console.log(`Didnt exists ${keywordEntity.keywordName}`);
+          // console.log(`Didnt exists ${keywordEntity.keywordName}`);
           await keywordRepo.save(keywordEntity); // TODO: Save keyword, if not found        
         } else {
-          console.log(`Already exist '${keywordEntity.keywordName}'`);
+          // console.log(`Already exist '${keywordEntity.keywordName}'`);
         }
       } catch (error: any) {
         console.log('Save keyword error');
@@ -206,17 +206,17 @@ async function scrape(projectId: number, browser: Browser) {
       program_to_keyword.keyword = keywordEntity;
 
       if (foundKeyword) {
-        // TODO: save to an already existing (required)
-        program_to_keyword.keyword = foundKeyword;
+        program_to_keyword.keyword = foundKeyword; // NOTE: If found, uses existing keyword from mapping table.
       }
 
       // TODO: does an association already exists
       const associationExists = await programKeywordRepo.findOne({ where: { program: programEntity, keyword: keywordEntity } });
 
-      console.log(programEntity.programId, keywordEntity.keywordName)
+      
+      // console.log(programEntity.programId, keywordEntity.keywordName); // NOTE: Debugging purposes
 
       if (associationExists) {
-        console.log('Association already exists');
+        // console.log('Association already exists'); // NOTE: Debugging purposes
         continue; // TODO: goes to next iteration it relation already exists
       }
 
@@ -227,22 +227,23 @@ async function scrape(projectId: number, browser: Browser) {
       }
     }
 
-    // -------------------------
-
     // TODO: keywords of programs
     const keys = `${' '.repeat(6)}╰─── ${JSON.stringify([...keywords])}`;
     console.log(keys);
 
     // TODO: address of programs
     let address = await page.$$eval('div.panel-title', (element: any) => element[5].innerText);
-    address = address.substring(1, address.length);
-    let region: string[] = [];
+    const addressFix = address.substring(1, address.length);
 
-    // TODO: ternary expression for regions (Either data or null)
-    let datas: ([] | any) = (address === "Cidades de atuação")
+    // TODO: ternary expression for regions panel on portal (dataExists || null)
+    let datas: ([] | any) = (addressFix === "Cidades de atuação")
       ? await page.$$eval('div.panel-content', (element: any) => element[5].innerText.split('\n'))
       : null;
-
+    
+    let cities: string[] = [];
+    let states: string[] = [];
+    
+    // TODO: Parse the panel title in order to find addresses
     for (let i = 0; datas === null || i < datas.length; i++) {
 
       if (datas === null) {
@@ -251,16 +252,60 @@ async function scrape(projectId: number, browser: Browser) {
         break;
       }
 
-      // NOTE: The third column contains the actual regions 
+      // NOTE: The third column contains the addresses 
       if (datas.indexOf(datas[i]) >= 3) {
         console.log(`Cidades: `);
         console.log(`${' '.repeat(6)}╰───`, datas[i].split('\t'));
-        // TODO: save the address
-        // TODO: save the program address associative table
+        const addressesSplitted: string[] = datas[i].split('\t');
+        // NOTE: collect cities and states 
+        cities.push(addressesSplitted[0]);
+        states.push(addressesSplitted[1]);
       }
     }
 
-    // console.log(datas)
+    console.log(cities); // NOTE: Array of cities
+    console.log(states); // NOTE: Array of states
+
+    console.log(cities.length)
+    console.log(states.length)
+
+    // TODO: Saving address entities and link to program
+    
+    try {
+
+      const address: AddressEntity = {
+        addressId: 0,
+        institutionUnit: 'politecnico' ?? null,
+        campus: 'sede' ?? null,
+        university: 'federal university of santa maria' ?? null,
+        abbreviation: 'ufsm' ?? null,
+        street: 'roraima' ?? null,
+        number: '1000' ?? null,
+        complement: 'Some complement' ?? null,
+        zipCode: 'xxxxxxxx' ?? null,
+        district: 'camobi' ?? null,
+        city: 'santa maria' ?? null,
+        state: 'rio grande do sul' ?? null,
+        country: 'brazil' ?? null
+      };
+      
+      for (let i = 0; (cities.length === 0) || (i < cities.length); ++i) {
+
+        console.log(`Enters the loop`);
+
+        if (cities.length === 0) {
+          console.log(`No addresses to be saved: ${cities.length}`);
+          break;
+        }
+
+        const city = cities[i];
+        const state = states[i];
+        console.log(city, state);
+      }
+      
+    } catch (error: any) {
+      console.log(error);
+    }
 
     let tabPointer = 1;
 

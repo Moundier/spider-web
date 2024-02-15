@@ -58,6 +58,7 @@ Puppeteer is a Node.js library for browser automation via the DevTools Protocol,
 - Achievements System (Interactions, Time-use, Personal-profile)
 
 ### Note
+- Sometimes 'regions' are in 'keywords' (This isnt correct)
 - https://portal.ufsm.br/projetos/publico/projetos/view.html?idProjeto=74498 
 - https://portal.ufsm.br/projetos/publico/projetos/view.html?idProjeto=74291
 - https://portal.ufsm.br/projetos/publico/projetos/view.html?idProjeto=74185
@@ -70,11 +71,24 @@ Puppeteer is a Node.js library for browser automation via the DevTools Protocol,
 
 ### Queries
 
-1. Get all keywords linked to project id
+1. Delete table's lines
 ```sql
-SELECT "keywordName" 
-FROM keyword, program, program_keyword 
-WHERE program."programId" = program_keyword."programId" 
-AND keyword."keywordId" = program_keyword."keywordId"
-AND program."programId" = 281;
+delete from program_keyword;
+delete from program;
+delete from keywprd;
+```
+
+2. Selection on tables
+```sql
+select * from program_keyword;
+select * from program;
+select * from keyword;
+```
+
+3. Get all keywords linked to project id
+```sql
+select "keywordName" from program, keyword, program_keyword
+where program."programId" = program_keyword."programId"
+and keyword."keywordId" = program_keyword."keywordId"
+and program."programId" = 3;
 ```
