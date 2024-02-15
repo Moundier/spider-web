@@ -10,7 +10,7 @@ export class AddressEntity {
   institutionUnit?: string | null; // NOTE: politecnico
 
   @Column({ nullable: true, unique: true, type: 'varchar' }) // TODO: Unique
-  campus?: string | null; // sede
+  campus?: string; // sede
 
   @Column({ nullable: true, unique: false, type: 'varchar' }) // TODO: Unique
   university?: string | null; // federal university of santa maria

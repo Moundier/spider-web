@@ -58,7 +58,7 @@ Puppeteer is a Node.js library for browser automation via the DevTools Protocol,
 - Achievements System (Interactions, Time-use, Personal-profile)
 
 ### Note
-- Sometimes 'regions' are in 'keywords' (This isnt correct)
+- Sometimes there are 'regions' in 'keyword' 
 - https://portal.ufsm.br/projetos/publico/projetos/view.html?idProjeto=74498 
 - https://portal.ufsm.br/projetos/publico/projetos/view.html?idProjeto=74291
 - https://portal.ufsm.br/projetos/publico/projetos/view.html?idProjeto=74185
@@ -91,4 +91,13 @@ select "keywordName" from program, keyword, program_keyword
 where program."programId" = program_keyword."programId"
 and keyword."keywordId" = program_keyword."keywordId"
 and program."programId" = 3;
+```
+
+4. Get all addresses linked to progject id
+```sql
+
+select "city" from program, address, program_address
+where program."programId" = program_address."programId"
+and address."addressId" = program_address."addressId"
+and program."programId" = ;
 ```

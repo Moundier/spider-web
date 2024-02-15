@@ -6,7 +6,7 @@ import { Program } from './model/program.model';
 import { MemberModel } from './model/member.model.';
 import { ProgramEntity } from './entity/program';
 import datasource from './config/datasource';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, EntityNotFoundError, Repository } from 'typeorm';
 import { MemberEntity } from './entity/member';
 import { KeywordEntity } from './entity/keyword';
 import { AddressEntity } from './entity/address';
@@ -50,8 +50,8 @@ const addressRepo: Repository<AddressEntity> = datasource.getRepository(AddressE
 const memberRepo: Repository<MemberEntity> = datasource.getRepository(MemberEntity);
 
 const programHasMemberRepo: Repository<ProgramToMember> = datasource.getRepository(ProgramToMember);
-const programKeywordRepo: Repository<ProgramToKeyword> = datasource.getRepository(ProgramToKeyword);
-const programHasAddressRepo: Repository<ProgramToAddress> = datasource.getRepository(ProgramToAddress);
+const programToKeywordRepo: Repository<ProgramToKeyword> = datasource.getRepository(ProgramToKeyword);
+const programToAddressRepo: Repository<ProgramToAddress> = datasource.getRepository(ProgramToAddress);
 
 let programPanelDataInspector: Set<string> = new Set(); // Dados Basicos, Inovacao e gesto financeira, Classificacoes, Participantes, Orgaos, Cidades de atuacao, Publico Alvo, Plano de Trabalho
 let programClassificInspector: Set<string> = new Set(); // ENSINO, PESQUISA, EXTENSAO, DESENVOLVIMENTO_INSTITUCIOAL,
@@ -203,6 +203,7 @@ async function scrape(projectId: number, browser: Browser) {
         handleError(error);
       }
 
+      // TODO: association of 'program' and 'keyword' 
       program_to_keyword.keyword = keywordEntity;
 
       if (foundKeyword) {
@@ -210,18 +211,16 @@ async function scrape(projectId: number, browser: Browser) {
       }
 
       // TODO: does an association already exists
-      const associationExists = await programKeywordRepo.findOne({ where: { program: programEntity, keyword: keywordEntity } });
-
-
+      const associationExists = await programToKeywordRepo.findOne({ where: { program: programEntity, keyword: keywordEntity } });
       // console.log(programEntity.programId, keywordEntity.keywordName); // NOTE: Debugging purposes
 
       if (associationExists) {
-        // console.log('Association already exists'); // NOTE: Debugging purposes
-        continue; // TODO: goes to next iteration it relation already exists
+        // console.log(`Already exists. Association of ${program.programId} and ${keywordEntity.keywordId}`);
+        continue; // TODO: Alredy exists. Goes to next iteration.
       }
 
       try {
-        await programKeywordRepo.save(program_to_keyword); // TODO: save keyword to program        
+        await programToKeywordRepo.save(program_to_keyword); // TODO: save keyword to program        
       } catch (error: any) {
         console.log(`Error saving association: ${error.message}`);
       }
@@ -243,7 +242,7 @@ async function scrape(projectId: number, browser: Browser) {
     let cities: string[] = [];
     let states: string[] = [];
 
-    // TODO: Separate the addressses from the cities panel title
+    // TODO: Parsing and separate the addressses from the cities panel title
     for (let i = 0; datas === null || i < datas.length; i++) {
 
       if (datas === null) {
@@ -263,48 +262,68 @@ async function scrape(projectId: number, browser: Browser) {
       }
     }
 
-    // NOTE: Debugging utilites
-    // console.log(cities); 
-    // console.log(states); 
-    // console.log(cities.length)
-    // console.log(states.length)
-
-    // TODO: Saving address entities and link to program
-
-    const addressDefault: AddressEntity = {
-      addressId: null,
-      institutionUnit: null,
-      campus: null,
-      university: null,
-      abbreviation: null,
-      street: null,
-      number: null,
-      complement: null,
-      zipCode: null,
-      district: null,
-      city: null,
-      state: null,
-      country: null
-    };
-
+    // TODO: Saving addresses and linking to program
     for (let i = 0; (cities.length === 0) || (i < cities.length); ++i) {
 
-      const address: AddressEntity = addressDefault;
+      const addressEntity: AddressEntity = { };
 
       if (cities.length === 0) {
         console.log(`None to save: ${cities.length}`);
         break;
       }
 
-      const city = cities[i];
-      const state = states[i];
-      address.city = city;
-      address.state = state;
-      address.campus = getCampusFromCity(city);
+      addressEntity.city = cities[i];
+      addressEntity.state = states[i];
+      addressEntity.campus = getCampusFromCity(addressEntity.city) ?? undefined;
+
+      // TODO: Find address
+      const programToAddress = new ProgramToAddress();
+      let foundAddress;
+
+      try {
+        foundAddress = await addressRepo.findOne({ where: { city: addressEntity.city, state: addressEntity.state, campus: addressEntity.campus } });
+      } catch (error: any) {
+        console.log(`Error: finding address ` + error.message);
+      }
+      
+      console.log(`Not found (null) ` + JSON.stringify(foundAddress).substring(0, 80));
+      // TODO: If doesn't exist, go and save
+      try {
+        if (foundAddress === null) {
+          console.log('Didnt exist');
+          await addressRepo.save(addressEntity);
+        } else {
+          console.log('Already exist');
+        }
+      } catch (error: any) {        
+        console.log(`Error: saving address ` + error.message);
+      }
+
+      programToAddress.program = programEntity;
+
+      if (foundAddress) {
+        programToAddress.address = foundAddress; // NOTE: If found, uses existing keyword from mapping table.
+      }
+
+      const associationExist = await programToAddressRepo.findOne({ where: { program: programEntity, address: addressEntity }}); 
+
+      if (associationExist) {
+        console.log(`Already exists. Association of ${programEntity.programId} and ${foundAddress?.addressId}`);
+        continue; // NOTE: association already exists. Goes to next. (Don't save it again)
+      }
+
+      try {
+        await programToAddressRepo.save(programToAddress); // TODO: save keyword to program        
+      } catch (error: any) {
+        console.log(`Error on associating: ${error.message}`);
+      }
 
       // console.log(city, state);
-      console.log(address);
+      // console.log(addressEntity);
     }
+
+
+    // --------------- TODO: member tabs section ---------------
 
     let tabPointer = 1;
 
@@ -321,7 +340,6 @@ async function scrape(projectId: number, browser: Browser) {
         // console.log(`"Button ${detalhesButtons.indexOf(button)}"`); IMPORTANT
 
         try {
-          // TODO: also while loop here to make it even faster
           await button.click(); /// TODO: Open the modal
         } catch (error: any) {
           fail('Failure on modal open: ' + error.message);
@@ -348,6 +366,9 @@ async function scrape(projectId: number, browser: Browser) {
       const nextTabsLink: ElementHandle<Element> | null = await page.$('li a[title="Próxima página"]');
       const disabledBtns: ElementHandle<Element>[] | null = await page.$$('.disabled');
       const linkDisabled: ElementHandle<Element> = disabledBtns[2]; // NOTE: Obtain third inactive skip button. (0, 1, 2)
+
+      // NOTE: Division for better visual debugging
+      console.log('-'.repeat(100));
 
       let members: MemberModel[] | null = await getMemberFromModal(page);
       for (const m of members ?? []) {
@@ -385,7 +406,7 @@ async function scrape(projectId: number, browser: Browser) {
   }
 }
 
-function getCampusFromCity(city: string): (string | null) {
+function getCampusFromCity(city: string | null | undefined): (string | null) {
   switch (city) {
     case 'Santa Maria':
       return 'Campus Sede';
@@ -396,8 +417,10 @@ function getCampusFromCity(city: string): (string | null) {
     case 'Cachoeira do Sul':
       return 'Campus de Cachoeira do Sul';            
     default:
-      return null;
+      break;
   }
+
+  return null;
 }
 
 function getKey(string: string) {
@@ -548,7 +571,6 @@ async function getMemberFromModal(page: Page): Promise<MemberModel[] | null> {
     // data.vinculo = getVal(data.vinculo);
     // console.log(data);
 
-    console.log('-'.repeat(100)); // NOTE: a divisor between members
     // console.log(member); // NOTE: maintain
     // get the saved program 
     // save association with each
