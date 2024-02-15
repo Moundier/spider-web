@@ -41,7 +41,7 @@ async function main(): Promise<void> {
 function handleError(error: any) {
   if (error.code === '23505') {
     warn(`${error.detail}`);
-  } 
+  }
 }
 
 const programRepo: Repository<ProgramEntity> = datasource.getRepository(ProgramEntity);
@@ -129,7 +129,7 @@ async function scrape(projectId: number, browser: Browser) {
       status,
       hyperlink: projectUrl
     };
-      
+
     // TODO: save the program entity
     let programEntity: ProgramEntity = programToEntity(program);
 
@@ -212,7 +212,7 @@ async function scrape(projectId: number, browser: Browser) {
       // TODO: does an association already exists
       const associationExists = await programKeywordRepo.findOne({ where: { program: programEntity, keyword: keywordEntity } });
 
-      
+
       // console.log(programEntity.programId, keywordEntity.keywordName); // NOTE: Debugging purposes
 
       if (associationExists) {
@@ -232,18 +232,18 @@ async function scrape(projectId: number, browser: Browser) {
     console.log(keys);
 
     // TODO: address of programs
-    let address = await page.$$eval('div.panel-title', (element: any) => element[5].innerText);
-    const addressFix = address.substring(1, address.length);
+    let addressElement = await page.$$eval('div.panel-title', (element: any) => element[5].innerText);
+    const addressFix = addressElement.substring(1, addressElement.length);
 
     // TODO: ternary expression for regions panel on portal (dataExists || null)
     let datas: ([] | any) = (addressFix === "Cidades de atuação")
       ? await page.$$eval('div.panel-content', (element: any) => element[5].innerText.split('\n'))
       : null;
-    
+
     let cities: string[] = [];
     let states: string[] = [];
-    
-    // TODO: Parse the panel title in order to find addresses
+
+    // TODO: Separate the addressses from the cities panel title
     for (let i = 0; datas === null || i < datas.length; i++) {
 
       if (datas === null) {
@@ -263,48 +263,47 @@ async function scrape(projectId: number, browser: Browser) {
       }
     }
 
-    console.log(cities); // NOTE: Array of cities
-    console.log(states); // NOTE: Array of states
-
-    console.log(cities.length)
-    console.log(states.length)
+    // NOTE: Debugging utilites
+    // console.log(cities); 
+    // console.log(states); 
+    // console.log(cities.length)
+    // console.log(states.length)
 
     // TODO: Saving address entities and link to program
-    
-    try {
 
-      const address: AddressEntity = {
-        addressId: 0,
-        institutionUnit: 'politecnico' ?? null,
-        campus: 'sede' ?? null,
-        university: 'federal university of santa maria' ?? null,
-        abbreviation: 'ufsm' ?? null,
-        street: 'roraima' ?? null,
-        number: '1000' ?? null,
-        complement: 'Some complement' ?? null,
-        zipCode: 'xxxxxxxx' ?? null,
-        district: 'camobi' ?? null,
-        city: 'santa maria' ?? null,
-        state: 'rio grande do sul' ?? null,
-        country: 'brazil' ?? null
-      };
-      
-      for (let i = 0; (cities.length === 0) || (i < cities.length); ++i) {
+    const addressDefault: AddressEntity = {
+      addressId: null,
+      institutionUnit: null,
+      campus: null,
+      university: null,
+      abbreviation: null,
+      street: null,
+      number: null,
+      complement: null,
+      zipCode: null,
+      district: null,
+      city: null,
+      state: null,
+      country: null
+    };
 
-        console.log(`Enters the loop`);
+    for (let i = 0; (cities.length === 0) || (i < cities.length); ++i) {
 
-        if (cities.length === 0) {
-          console.log(`No addresses to be saved: ${cities.length}`);
-          break;
-        }
+      const address: AddressEntity = addressDefault;
 
-        const city = cities[i];
-        const state = states[i];
-        console.log(city, state);
+      if (cities.length === 0) {
+        console.log(`None to save: ${cities.length}`);
+        break;
       }
-      
-    } catch (error: any) {
-      console.log(error);
+
+      const city = cities[i];
+      const state = states[i];
+      address.city = city;
+      address.state = state;
+      address.campus = getCampusFromCity(city);
+
+      // console.log(city, state);
+      console.log(address);
     }
 
     let tabPointer = 1;
@@ -383,6 +382,21 @@ async function scrape(projectId: number, browser: Browser) {
     fail(`Error scraping project ${projectId}: ${error.message}`);
   } finally {
     await page.close();
+  }
+}
+
+function getCampusFromCity(city: string): (string | null) {
+  switch (city) {
+    case 'Santa Maria':
+      return 'Campus Sede';
+    case 'Frederico Westphalen':
+      return 'Campus de Frederico Westphalen';
+    case 'Palmeira das Missões':
+      return 'Campus de Palmeira das Missões';
+    case 'Cachoeira do Sul':
+      return 'Campus de Cachoeira do Sul';            
+    default:
+      return null;
   }
 }
 
