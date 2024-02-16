@@ -1,17 +1,18 @@
 import { Browser, ElementHandle, HTTPResponse, Page, launch } from 'puppeteer';
-import { setTimeout } from "node:timers/promises"
 import { now } from './utils/time';
-import { fail, done, note, warn } from './utils/todo'
+import { fail, done, warn } from './utils/todo'
 import { MemberDto } from './model/member.dto';
+import { DataSource, Repository } from 'typeorm';
 import { ProgramEntity } from './entity/program';
-import datasource from './config/datasource';
-import { DataSource, EntityNotFoundError, Repository } from 'typeorm';
 import { MemberEntity } from './entity/member';
 import { KeywordEntity } from './entity/keyword';
 import { AddressEntity } from './entity/address';
 import { ProgramToMember } from './entity/join/program_to_member';
 import { ProgramToKeyword } from './entity/join/program_to_keyword';
 import { ProgramToAddress } from './entity/join/program_to_address';
+
+import { setTimeout } from "node:timers/promises";
+import datasource from './config/datasource';
 
 const baseUrl = 'https://portal.ufsm.br/projetos/publico/projetos/view.html?idProjeto=';
 

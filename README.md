@@ -16,39 +16,38 @@ Puppeteer is a Node.js library for browser automation via the DevTools Protocol,
 
 ## Requirements
 - `node`
-- `pg`
-- `typeorm`: not only boilerplate, but also 
-- `tsx`
+- `pg` (Can be removed)
+- `typeorm`: not only boilerplate (lombok), but also database persistence object relational mapper 
+- `tsx`: typescript for typing and annotations (experimental feature)
 - `nodemon`: used for hot reloading
 - `express`: restful
 
 ## Quick Start
-1. Generate `package-lock.json` with `npx npm init -y`
-2. Install Puppeteer with `npx npm install puppeteer`
-3. Ignore `node_modules` in .gitignore
-5. Run `npx tsx ./src/index.ts`
+1. Generate package-lock.json with npx npm init -y
+2. Generate tsconfig.json with tsc --init
+3. Install Puppeteer with npx npm install puppeteer
+4. Install TypeORM with npx npm install typeorm
+5. Install reflect-metadata with npx npm install reflect-metadata
+6. Ignore node_modules in .gitignore
+7. Run npx ts-node ./src/index.ts
 
 ### Todo
-- [x] to do: modal asynchronous open timeout
-- [x] to do: modal asynchronous close timeout
-- [x] to do: inspect attributes of members
-- [x] to do: inspect titles on breadcrumbs 
-- [x] to do: inspect roles of member 
-- [x] to do: inspect classification of programs
-- [x] to do: assign value to it's correct key
-- [x] to do: collect program members
-- [x] to do: collect program keywords
-- [x] to do: attach id of url to program, for future inspections
-- [x] to do: member image source/hyperlink
-- [x] to do: member images are optional
-- [x] to do: program addresses are optional
-- [x] to do: classes to entities 
-- [x] to do: save to database
-- [ ] to do: dont save whenver it is 'not informed or null data'
-
-- [ ] to do: question: where departaments (individually) are localized?
-- [ ] to do: question: remove specific characters from keywords and regions?
-- [ ] to do: question: keywords and regions, should be uppercased or lowercased?
+- [x] `to do`: modal asynchronous open timeout
+- [x] `to do`: modal asynchronous close timeout
+- [x] `to do`: inspect attributes of members
+- [x] `to do`: inspect titles on breadcrumbs 
+- [x] `to do`: inspect roles of member 
+- [x] `to do`: inspect classification of programs
+- [x] `to do`: assign value to it's correct key
+- [x] `to do`: collect program members
+- [x] `to do`: collect program keywords
+- [x] `to do`: attach id of url to program, for future inspections
+- [x] `to do`: member image source/hyperlink
+- [x] `to do`: member images are optional
+- [x] `to do`: program addresses are optional
+- [x] `to do`: classes to entities 
+- [x] `to do`: save to database
+- [x] `to do`: verify for persisted data before saving, in order to avoid duplicates.
 
 ### Ideas Assemble
 - Youtube Shorts similar Main Page
@@ -116,4 +115,16 @@ select "name" from program, member, program_member
 where program."programId" = program_member."programId"
 and member."memberId" = program_member."memberId"
 and program."programId" = 'id';
+```
+
+6. Drop all sequences
+
+```sql
+DROP SEQUENCE address_addressId_seq;
+DROP SEQUENCE keyword_keywordId_seq; 
+DROP SEQUENCE member_memberId_seq;
+DROP SEQUENCE program_address_id_seq;
+DROP SEQUENCE program_keyword_id_seq;
+DROP SEQUENCE program_member_id_seq;
+DROP SEQUENCE program_programId_seq;
 ```

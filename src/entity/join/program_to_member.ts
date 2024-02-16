@@ -1,12 +1,10 @@
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, Unique } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 import { ProgramEntity } from "../program";
 import { MemberEntity } from "../member";
 import { MemberRole } from "../../model/member.dto";
 
 @Entity({ name:'program_member' })
 export class ProgramToMember {
-
-  // NOTE: This should be in program to memeber 
 
   @PrimaryGeneratedColumn()
   id?: number;
