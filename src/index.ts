@@ -595,11 +595,11 @@ enum MemberDetails {
 }
 
 main().then(
-  (onResolved: any) => {
-    // Some task on success
+  (success: any) => {
+    // TODO: Some task on success
   },
-  (onRejected: any) => {
-      // Some task on failure
+  (failure: any) => {
+    // TODO: Some task on failure
   }
 ).catch((error: unknown) => { 
   // Handle error here
