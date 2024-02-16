@@ -194,7 +194,7 @@ async function scrape(projectId: number, browser: Browser) {
       try {
         if (foundKeyword === null) {
           // console.log(`Didnt exists ${keywordEntity.keywordName}`);
-          await keywordRepo.save(keywordEntity); // TODO: Save keyword, if not found        
+          await keywordRepo.save(keywordEntity); // NOTE: not found, then save to database
         }
       } catch (error: any) {
         console.log('Save keyword error');
@@ -288,7 +288,7 @@ async function scrape(projectId: number, browser: Browser) {
       try {
         if (foundAddress === null) {
           console.log('Didnt exist');
-          await addressRepo.save(addressEntity); // NOTE: save if not found
+          await addressRepo.save(addressEntity); // NOTE: not found, then save to database
         }
       } catch (error: any) {        
         console.log(`Error: saving address ` + error.message);
