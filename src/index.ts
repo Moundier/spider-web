@@ -195,8 +195,6 @@ async function scrape(projectId: number, browser: Browser) {
         if (foundKeyword === null) {
           // console.log(`Didnt exists ${keywordEntity.keywordName}`);
           await keywordRepo.save(keywordEntity); // TODO: Save keyword, if not found        
-        } else {
-          // console.log(`Already exist '${keywordEntity.keywordName}'`);
         }
       } catch (error: any) {
         console.log('Save keyword error');
@@ -207,6 +205,7 @@ async function scrape(projectId: number, browser: Browser) {
       program_to_keyword.keyword = keywordEntity;
 
       if (foundKeyword) {
+        // console.log(`Already exist '${keywordEntity.keywordName}'`);
         program_to_keyword.keyword = foundKeyword; // NOTE: If found, uses existing keyword from mapping table.
       }
 
@@ -262,7 +261,8 @@ async function scrape(projectId: number, browser: Browser) {
       }
     }
 
-    // TODO: Saving addresses and linking to program
+    // TODO: address section
+
     for (let i = 0; (cities.length === 0) || (i < cities.length); ++i) {
 
       const addressEntity: AddressEntity = { };
@@ -275,8 +275,6 @@ async function scrape(projectId: number, browser: Browser) {
       addressEntity.city = cities[i];
       addressEntity.state = states[i];
       addressEntity.campus = getCampusFromCity(addressEntity.city) ?? undefined;
-
-      // TODO: address section
 
       const programToAddress = new ProgramToAddress();
       let foundAddress;
@@ -330,16 +328,14 @@ async function scrape(projectId: number, browser: Browser) {
 
       for (const button of detalhesButtons) {
 
-        await setTimeout(500); // timeout
+        await setTimeout(500); // NOTE: timeout is required for asynchronous modal opening
         // console.log(`"Button ${detalhesButtons.indexOf(button)}"`); IMPORTANT
 
         try {
-          await button.click(); /// TODO: Open the modal
+          await button.click(); /// TODO: open the modal
         } catch (error: any) {
           fail('Failure on modal open: ' + error.message);
         }
-
-        // TODO: close the modal
 
         try {
           let closeButtons: any = null;
@@ -351,7 +347,7 @@ async function scrape(projectId: number, browser: Browser) {
             lastCloseButton = closeButtons[lastIndex];
           }
 
-          await lastCloseButton.click();
+          await lastCloseButton.click();  // TODO: close the modal
         } catch (error: any) {
           fail('Button (Close): ' + error.message);
         }
@@ -361,8 +357,7 @@ async function scrape(projectId: number, browser: Browser) {
       const disabledBtns: ElementHandle<Element>[] | null = await page.$$('.disabled');
       const linkDisabled: ElementHandle<Element> = disabledBtns[2]; // NOTE: Obtain third inactive skip button. (0, 1, 2)
 
-      // NOTE: Division for better visual debugging
-      console.log('-'.repeat(100));
+      console.log('-'.repeat(100)); // NOTE: Division for better visual debugging.
 
       let members: MemberModel[] | null = await getMemberFromModal(page);
       for (const m of members ?? []) {
@@ -401,6 +396,7 @@ async function scrape(projectId: number, browser: Browser) {
 }
 
 function getCampusFromCity(city: string | null | undefined): (string | null) {
+  
   switch (city) {
     case 'Santa Maria':
       return 'Campus Sede';
@@ -450,7 +446,6 @@ async function getMemberFromModal(page: Page): Promise<MemberModel[] | null> {
 
   for (const modal of deadModals) {
 
-    // NOTE: Must be inner loop.
     let member: MemberModel = {
       memberId: null,
       name: null,
@@ -529,8 +524,7 @@ async function getMemberFromModal(page: Page): Promise<MemberModel[] | null> {
           member.valor = value.trim();
           break;
         default:
-          // note(`Unknown key (possibly name): ${key}`);
-          member.name = key.trim();
+          member.name = key.trim(); // TODO: unknown key is the 'name' attribute
           break;
       }
 
@@ -595,10 +589,10 @@ enum MemberDetails {
 }
 
 main().then(
-  (success: any) => {
+  (onSuccess: any) => {
     // TODO: Some task on success
   },
-  (failure: any) => {
+  (onFailure: any) => {
     // TODO: Some task on failure
   }
 ).catch((error: unknown) => { 
