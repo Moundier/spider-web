@@ -31,7 +31,7 @@ export enum MemberRole {
   COORDENADOR_ADMINISTRATIVO = "Coordenador Administrativo"
 }
 
-export interface MemberModel {
+export interface MemberDto {
   memberId: number | null; // member
   name: string | null; // member
   matricula: string | null; // // member unique
