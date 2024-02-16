@@ -1,7 +1,7 @@
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, Unique } from "typeorm";
 import { ProgramEntity } from "../program";
 import { MemberEntity } from "../member";
-import { MemberRole } from "../../model/member.model.";
+import { MemberRole } from "../../model/member.dto";
 
 @Entity({ name:'program_member' })
 export class ProgramToMember {
@@ -20,20 +20,20 @@ export class ProgramToMember {
   member?: MemberEntity;
 
   @Column({ nullable: true, type: 'varchar' })
-  memberRole!: MemberRole | null; // NOTE: to go
+  memberRole?: MemberRole | null; // NOTE: to go
 
   @Column({ nullable: true, type: 'varchar' })
-  cargaHoraria!: string | null; // NOTE: to go
+  cargaHoraria?: string | null; // NOTE: to go
 
   @Column({ nullable: true, type: 'varchar' })
-  periodo!: string | null; // NOTE: to go
+  periodo?: string | null; // NOTE: to go
 
   @Column({ nullable: true, type: 'varchar' })
-  recebeBolsa!: string | null; // NOTE: to go
+  recebeBolsa?: string | null; // NOTE: to go
 
   @Column({ nullable: true, type: 'varchar' })
-  bolsa!: string | null; // NOTE: to go
+  bolsa?: string | null; // NOTE: to go
 
   @Column({ nullable: true, type: 'varchar' })
-  valor!: string | null; // NOTE: to go
+  valor?: string | null; // NOTE: to go
 }

@@ -1,49 +1,49 @@
-import { Entity, PrimaryGeneratedColumn, Column, BaseEntity } from 'typeorm'
+import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm'
 
 @Entity({ name: 'program' })
-export class ProgramEntity extends BaseEntity {
+export class ProgramEntity {
 
   @PrimaryGeneratedColumn()
-  programId!: number | null;
+  public programId?: number | null;
 
   @Column({ nullable: true, type: 'varchar' })
-  imageSource!: string | null;
+  public imageSource?: string | null;
 
   @Column({ nullable: true, type: 'varchar' })
-  domainImageSource!: string | null;
+  public domainImageSource?: string | null;
 
   @Column({ nullable: true, type: 'varchar' })
-  title!: string | null;
+  public title?: string | null;
 
   @Column({ unique: true, type: 'varchar' })
-  numberUnique!: string;
+  public numberUnique?: string;
 
   @Column({ default: 'DEFAULT', type: 'varchar' })
-  classification!: Classification;
+  public classification?: Classification | null;
 
   @Column({ nullable: true, type: 'varchar' })
-  summary!: string | null;
+  public summary?: string | null;
 
   @Column({ nullable: true, type: 'varchar' })
-  objectives!: string | null;
+  public objectives?: string | null;
 
   @Column({ nullable: true, type: 'varchar' })
-  defense!: string | null;
+  public defense?: string | null;
 
   @Column({ nullable: true, type: 'varchar' })
-  results!: string | null;
+  public results?: string | null;
 
   @Column({ nullable: true, type: 'varchar' })
-  dateStart!: string | null;
+  public dateStart?: string | null;
 
   @Column({ nullable: true, type: 'varchar' })
-  dateFinal!: string | null;
+  public dateFinal?: string | null;
 
   @Column({ default: 'DEFAULT', type: 'varchar' })
-  status!: Status;
+  public status?: Status | null;
 
   @Column({ nullable: true, type: 'varchar' })
-  hyperlink!: string;
+  public hyperlink?: string | null;
 }
 
 export enum Status {
@@ -61,6 +61,8 @@ export enum Classification {
   EXTENSAO = 'EXTENSAO',
   DESENVOLVIMENTO_INSTITUCIONAL = 'DESENVOLVIMENTO_INSTITUCIONAL'
 }
+
+
 
 // revista ??
 

@@ -1,55 +1,37 @@
-import { Entity, PrimaryGeneratedColumn, Column, BaseEntity } from 'typeorm'
+import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm'
 
 @Entity({ name: 'member' })
-export class MemberEntity extends BaseEntity {
+export class MemberEntity {
 
   @PrimaryGeneratedColumn()
-  memberId!: number | null;
+  memberId?: number | null;
 
   @Column({ nullable: true, type: 'varchar' })
-  name!: string | null;
+  name?: string | null;
 
   @Column({ nullable: true, unique: true, type: 'varchar' })
-  matricula!: string | null;
+  matricula?: string | null;
 
   @Column({ nullable: true, type: 'varchar' })
-  vinculo!: AcademicRole | null;
+  vinculo?: AcademicRole | null;
 
   @Column({ nullable: true, type: 'varchar' })
-  vinculoStatus!: string | null;
+  vinculoStatus?: string | null;
 
   @Column({ nullable: true, unique: true, type: 'varchar' })
-  email!: string | null;
+  email?: string | null;
 
   @Column({ nullable: true, type: 'varchar' })
-  imageSource!: string | null;
+  imageSource?: string | null;
 
   @Column({ nullable: true, type: 'varchar' })
-  lotacaoExercicio!: string | null;
+  lotacaoExercicio?: string | null;
 
   @Column({ nullable: true, type: 'varchar' })
-  lotacaoOficial!: string | null;
+  lotacaoOficial?: string | null;
 
   @Column({ nullable: true, type: 'varchar' })
-  memberRole!: MemberRole | null; // NOTE: to go
-
-  @Column({ nullable: true, type: 'varchar' })
-  cargaHoraria!: string | null; // NOTE: to go
-
-  @Column({ nullable: true, type: 'varchar' })
-  periodo!: string | null; // NOTE: to go
-
-  @Column({ nullable: true, type: 'varchar' })
-  recebeBolsa!: string | null; // NOTE: to go
-
-  @Column({ nullable: true, type: 'varchar' })
-  curso!: string | null;
-
-  @Column({ nullable: true, type: 'varchar' })
-  bolsa!: string | null; // NOTE: to go
-
-  @Column({ nullable: true, type: 'varchar' })
-  valor!: string | null; // NOTE: to go
+  curso?: string | null;
 }
 
 enum AcademicRole {

@@ -4,7 +4,7 @@ import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 export class AddressEntity {
 
   @PrimaryGeneratedColumn()
-  addressId?: number | null; // ****
+  addressId?: number | null; 
 
   @Column({ nullable: true, unique: false, type: 'varchar' }) // TODO: Unique
   institutionUnit?: string | null; // NOTE: politecnico
