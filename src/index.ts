@@ -318,7 +318,7 @@ async function scrape(projectId: number, browser: Browser) {
     }
 
 
-    // TODO: members section
+    // TODO: asynchronous open and close all member modals 
 
     let tabPointer = 1;
 
@@ -328,7 +328,6 @@ async function scrape(projectId: number, browser: Browser) {
       await page.waitForSelector('.btn.detalhes');
       let detalhesButtons = await page.$$('.btn.detalhes');
 
-      // TODO: Async Open and Close Modals
       for (const button of detalhesButtons) {
 
         await setTimeout(500); // timeout
@@ -595,9 +594,14 @@ enum MemberDetails {
   Valor = 'Valor'
 }
 
-main().then((response: any) => {
-  // Handle response here
-}).catch((error: unknown) => { 
+main().then(
+  (onResolved: any) => {
+    // Some task on success
+  },
+  (onRejected: any) => {
+      // Some task on failure
+  }
+).catch((error: unknown) => { 
   // Handle error here
   console.log(error); 
 }).finally(() => {
