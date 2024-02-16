@@ -287,14 +287,10 @@ async function scrape(projectId: number, browser: Browser) {
         console.log(`Error: finding address ` + error.message);
       }
       
-      console.log(`Not found (null) ` + JSON.stringify(foundAddress).substring(0, 80));
-
       try {
         if (foundAddress === null) {
           console.log('Didnt exist');
           await addressRepo.save(addressEntity); // NOTE: save if not found
-        } else {
-          console.log('Already exist');
         }
       } catch (error: any) {        
         console.log(`Error: saving address ` + error.message);
@@ -303,6 +299,7 @@ async function scrape(projectId: number, browser: Browser) {
       programToAddress.program = programEntity;
 
       if (foundAddress) {
+        console.log(`Found ` + JSON.stringify(foundAddress).substring(0, 80));
         programToAddress.address = foundAddress; // NOTE: If found, uses existing keyword from mapping table.
       }
 
@@ -421,7 +418,7 @@ function getCampusFromCity(city: string | null | undefined): (string | null) {
   return null;
 }
 
-function getKey(string: string) {
+function getKey(string: string): string {
   const parts = string.split(':');
   const value = parts[0].trim();
   return value;
@@ -474,10 +471,10 @@ async function getMemberFromModal(page: Page): Promise<MemberModel[] | null> {
       valor: null  // TODO: to go
     };
 
-    const paragraphs = await modal.$$('div.modaljs-scroll-overlay p');
+    const paragraphs: ElementHandle<HTMLParagraphElement>[] = await modal.$$('div.modaljs-scroll-overlay p');
 
     try {
-      const base64Image = await modal.$eval('div.modaljs-scroll-overlay .span3 img', (image: any) => image.src);
+      const base64Image: string = await modal.$eval('div.modaljs-scroll-overlay .span3 img', (image: any) => image.src);
       member.imageSource = base64Image.substring(0, 80); // NOTE: temporarely
     } catch (error: unknown) {
       member.imageSource = null; // NOTE: It's an icon tag
@@ -485,7 +482,7 @@ async function getMemberFromModal(page: Page): Promise<MemberModel[] | null> {
 
     for (const p of paragraphs) {
 
-      const text = await p.evaluate((el: any) => el.innerText);
+      const text: string = await p.evaluate((el: any) => el.innerText);
       let [key, value]: any = text.split(':');
 
       if (value) {
@@ -598,4 +595,11 @@ enum MemberDetails {
   Valor = 'Valor'
 }
 
-main().catch((error: unknown) => { console.log(error); });
+main().then((response: any) => {
+  // Handle response here
+}).catch((error: unknown) => { 
+  // Handle error here
+  console.log(error); 
+}).finally(() => {
+  console.log(`Finally block executed`)
+});
