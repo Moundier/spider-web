@@ -73,16 +73,25 @@ Puppeteer is a Node.js library for browser automation via the DevTools Protocol,
 
 1. Delete table's lines
 ```sql
-delete from program_keyword;
-delete from program;
-delete from keywprd;
+-- delete from program;
+-- delete from keyword;
+-- delete from address;
+-- delete from member;
+-- delete from program_member;
+-- delete from program_address;
+-- delete from program_keyword;
 ```
 
 2. Selection on tables
 ```sql
-select * from program_keyword;
 select * from program;
 select * from keyword;
+select * from address;
+select * from member;
+
+select * from program_keyword;
+select * from program_address;
+select * from program_member;
 ```
 
 3. Get all keywords linked to project id
@@ -90,14 +99,21 @@ select * from keyword;
 select "keywordName" from program, keyword, program_keyword
 where program."programId" = program_keyword."programId"
 and keyword."keywordId" = program_keyword."keywordId"
-and program."programId" = 3;
+and program."programId" = 'id';
 ```
 
-4. Get all addresses linked to progject id
+4. Get all addresses linked to project id
 ```sql
-
 select "city" from program, address, program_address
 where program."programId" = program_address."programId"
 and address."addressId" = program_address."addressId"
-and program."programId" = ;
+and program."programId" = 'id';
+```
+
+5. Get all members linked to project id
+```sql
+select "name" from program, member, program_member
+where program."programId" = program_member."programId"
+and member."memberId" = program_member."memberId"
+and program."programId" = 'id';
 ```
