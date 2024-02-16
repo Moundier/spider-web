@@ -9,11 +9,6 @@ Puppeteer is a Node.js library for browser automation via the DevTools Protocol,
 - Effective handling of dynamic content and AJAX request
 - Thymeleaf HTML Rendering (Jsoup and BeautifulSoup4)
 
-## Staged
-- to go: compromise
-- to go: playwright
-- to go: ts-node
-
 ## Requirements
 - `node`
 - `pg` (Can be removed)
