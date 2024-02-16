@@ -276,7 +276,8 @@ async function scrape(projectId: number, browser: Browser) {
       addressEntity.state = states[i];
       addressEntity.campus = getCampusFromCity(addressEntity.city) ?? undefined;
 
-      // TODO: Find address
+      // TODO: address section
+
       const programToAddress = new ProgramToAddress();
       let foundAddress;
 
@@ -287,11 +288,11 @@ async function scrape(projectId: number, browser: Browser) {
       }
       
       console.log(`Not found (null) ` + JSON.stringify(foundAddress).substring(0, 80));
-      // TODO: If doesn't exist, go and save
+
       try {
         if (foundAddress === null) {
           console.log('Didnt exist');
-          await addressRepo.save(addressEntity);
+          await addressRepo.save(addressEntity); // NOTE: save if not found
         } else {
           console.log('Already exist');
         }
@@ -305,25 +306,22 @@ async function scrape(projectId: number, browser: Browser) {
         programToAddress.address = foundAddress; // NOTE: If found, uses existing keyword from mapping table.
       }
 
-      const associationExist = await programToAddressRepo.findOne({ where: { program: programEntity, address: addressEntity }}); 
+      const foundAssociation = await programToAddressRepo.findOne({ where: { program: programEntity, address: addressEntity }}); 
 
-      if (associationExist) {
+      if (foundAssociation) {
         console.log(`Already exists. Association of ${programEntity.programId} and ${foundAddress?.addressId}`);
-        continue; // NOTE: association already exists. Goes to next. (Don't save it again)
+        continue; // NOTE: found association (already exists). Go to next address.
       }
 
       try {
-        await programToAddressRepo.save(programToAddress); // TODO: save keyword to program        
+        await programToAddressRepo.save(programToAddress); 
       } catch (error: any) {
-        console.log(`Error on associating: ${error.message}`);
+        console.log(`Error on associating (saving): ${error.message}`);
       }
-
-      // console.log(city, state);
-      // console.log(addressEntity);
     }
 
 
-    // --------------- TODO: member tabs section ---------------
+    // TODO: members section
 
     let tabPointer = 1;
 
