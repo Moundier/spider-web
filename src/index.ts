@@ -2,8 +2,7 @@ import { Browser, ElementHandle, HTTPResponse, Page, launch } from 'puppeteer';
 import { setTimeout } from "node:timers/promises"
 import { now } from './utils/time';
 import { fail, done, note, warn } from './utils/todo'
-import { Program } from './model/program.model';
-import { MemberModel } from './model/member.model.';
+import { MemberDto } from './model/member.dto';
 import { ProgramEntity } from './entity/program';
 import datasource from './config/datasource';
 import { DataSource, EntityNotFoundError, Repository } from 'typeorm';
@@ -49,7 +48,7 @@ const keywordRepo: Repository<KeywordEntity> = datasource.getRepository(KeywordE
 const addressRepo: Repository<AddressEntity> = datasource.getRepository(AddressEntity);
 const memberRepo: Repository<MemberEntity> = datasource.getRepository(MemberEntity);
 
-const programHasMemberRepo: Repository<ProgramToMember> = datasource.getRepository(ProgramToMember);
+const programToMemberRepo: Repository<ProgramToMember> = datasource.getRepository(ProgramToMember);
 const programToKeywordRepo: Repository<ProgramToKeyword> = datasource.getRepository(ProgramToKeyword);
 const programToAddressRepo: Repository<ProgramToAddress> = datasource.getRepository(ProgramToAddress);
 
@@ -85,9 +84,8 @@ async function scrape(projectId: number, browser: Browser) {
       done(`${now()} Found url: ${projectUrl}`);
     }
 
-    // TODO: get panel titles
+    // TODO: debugging
     // const panelTitles: string = await page.$$eval('.panel-title', (titles: any) => titles.map((title: any) => title.textContent.trim()));
-
     // for (const title of panelTitles) {
     //   programPanelDataInspector.add(title);
     // }
@@ -106,32 +104,26 @@ async function scrape(projectId: number, browser: Browser) {
     let dateFinal = await page.$$eval('div.span3 > span', (element: any) => element[3].innerText);
     let status = await page.$$eval('div.span6 > span', (element: any) => element[14].innerText);
 
-    // TODO: set of status
-    programClassificInspector.add(classification);
+    // TODO: debugging
+    // programClassificInspector.add(classification);
 
-    // TODO: set of classifications
-    programSituationInspector.add(status);
+    // TODO: debugging
+    // programSituationInspector.add(status);
 
-    // TODO: program attributes
-    let program: Program = {
-      programId: 0,
-      imageSource: '',
-      domainImageSource: '',
-      title,
-      numberUnique,
-      classification,
-      summary,
-      objectives,
-      defense,
-      results,
-      dateStart,
-      dateFinal,
-      status,
-      hyperlink: projectUrl
-    };
+    // TODO: section of program persistence
 
-    // TODO: save the program entity
-    let programEntity: ProgramEntity = programToEntity(program);
+    let programEntity: ProgramEntity = { };
+    // programEntity.programId = 0; // NOTE: Not necessary because typeorm generates automatically.
+    programEntity.title = title;
+    programEntity.hyperlink = projectUrl;
+    programEntity.numberUnique = numberUnique;
+    programEntity.summary = summary;
+    programEntity.objectives = objectives;
+    programEntity.defense = defense;
+    programEntity.results = results;
+    programEntity.dateStart = dateStart;
+    programEntity.dateFinal = dateFinal;
+    programEntity.status = status;
 
     try {
       const foundProgram = await programRepo.findOne({ where: { numberUnique: programEntity.numberUnique } });
@@ -139,6 +131,7 @@ async function scrape(projectId: number, browser: Browser) {
       if (foundProgram) {
         programEntity = foundProgram;
         console.log(`Id: ` + foundProgram.programId);
+        programEntity.programId = foundProgram.programId; // NOTE: required for the association
       }
 
       if (foundProgram === null) {
@@ -150,12 +143,12 @@ async function scrape(projectId: number, browser: Browser) {
       handleError(error);
     }
 
-    // NOTE: output reduced for better visualization
-    program.title = program.title ? program.title.substring(0, 50) : null;
-    program.summary = program.summary ? program.summary.substring(0, 50) : null;
-    program.objectives = program.objectives ? program.objectives.substring(0, 50) : null;
-    program.defense = program.defense ? program.defense.substring(0, 50) : null;
-    program.results = program.results ? program.results.substring(0, 50) : null;
+    // NOTE: reduced attributs output for better visualization
+    // console.log(programEntity.title?.substring(0, 50));
+    // console.log(programEntity.summary?.substring(0, 50));
+    // console.log(programEntity.objectives?.substring(0, 50));
+    // console.log(programEntity.defense?.substring(0, 50));
+    // console.log(programEntity.results?.substring(0, 50));
 
     // TODO: program inspections
     // console.log(program); 
@@ -165,8 +158,9 @@ async function scrape(projectId: number, browser: Browser) {
     // console.log(memberAttributesInspector);
     // console.log(memberAcademicRole);
 
-    // TODO: collect keywords of programs
-    let keywords: any[] = await page.$$eval('div.span3 > span', (keys: any) => {
+    // TODO: section of keywords persistence
+
+    let keywords: string[] = await page.$$eval('div.span3 > span', (keys: any) => {
       return [
         keys[5].innerText,
         keys[7].innerText,
@@ -175,20 +169,15 @@ async function scrape(projectId: number, browser: Browser) {
       ];
     });
 
-    // TODO: save program keyword's
     for (const keyword of keywords) {
 
-      const program_to_keyword = new ProgramToKeyword();
-      program_to_keyword.program = programEntity;
-
       let keywordEntity: KeywordEntity = { keywordName: keyword };
-      let foundKeyword;
+      let foundKeyword: KeywordEntity | null = null;
 
       try {
         foundKeyword = await keywordRepo.findOne({ where: { keywordName: keyword } });
       } catch (error: any) {
         console.log('Find keyword error');
-        handleError(error);
       }
 
       try {
@@ -198,11 +187,11 @@ async function scrape(projectId: number, browser: Browser) {
         }
       } catch (error: any) {
         console.log('Save keyword error');
-        handleError(error);
       }
 
-      // TODO: association of 'program' and 'keyword' 
-      program_to_keyword.keyword = keywordEntity;
+      const program_to_keyword = new ProgramToKeyword();
+      program_to_keyword.program = programEntity;
+      program_to_keyword.keyword = keywordEntity; // NOTE: association begin
 
       if (foundKeyword) {
         // console.log(`Already exist '${keywordEntity.keywordName}'`);
@@ -210,10 +199,9 @@ async function scrape(projectId: number, browser: Browser) {
       }
 
       // TODO: does an association already exists
-      const associationExists = await programToKeywordRepo.findOne({ where: { program: programEntity, keyword: keywordEntity } });
-      // console.log(programEntity.programId, keywordEntity.keywordName); // NOTE: Debugging purposes
+      const foundAssociation = await programToKeywordRepo.findOne({ where: { program: programEntity, keyword: keywordEntity } });
 
-      if (associationExists) {
+      if (foundAssociation) {
         // console.log(`Already exists. Association of ${program.programId} and ${keywordEntity.keywordId}`);
         continue; // TODO: Alredy exists. Goes to next iteration.
       }
@@ -255,13 +243,12 @@ async function scrape(projectId: number, browser: Browser) {
         console.log(`Cidades: `);
         console.log(`${' '.repeat(6)}╰───`, datas[i].split('\t'));
         const addressesSplitted: string[] = datas[i].split('\t');
-        // NOTE: collect cities and states 
-        cities.push(addressesSplitted[0]);
-        states.push(addressesSplitted[1]);
+        cities.push(addressesSplitted[0]); // NOTE: collect cities 
+        states.push(addressesSplitted[1]); // NOTE: collect states
       }
     }
 
-    // TODO: address section
+    // TODO: section of address persistence
 
     for (let i = 0; (cities.length === 0) || (i < cities.length); ++i) {
 
@@ -275,33 +262,35 @@ async function scrape(projectId: number, browser: Browser) {
       addressEntity.city = cities[i];
       addressEntity.state = states[i];
       addressEntity.campus = getCampusFromCity(addressEntity.city) ?? undefined;
-
-      const programToAddress = new ProgramToAddress();
+     
       let foundAddress;
 
       try {
         foundAddress = await addressRepo.findOne({ where: { city: addressEntity.city, state: addressEntity.state, campus: addressEntity.campus } });
       } catch (error: any) {
-        console.log(`Error: finding address ` + error.message);
+        console.log(`FAIL: finding address ` + error.message);
       }
       
       try {
         if (foundAddress === null) {
-          console.log('Didnt exist');
-          await addressRepo.save(addressEntity); // NOTE: not found, then save to database
+          console.log(`INFO: didn't exist (address)`);
+          foundAddress = await addressRepo.save(addressEntity); // NOTE: not found, then save to database
         }
       } catch (error: any) {        
-        console.log(`Error: saving address ` + error.message);
+        console.log(`FAIL: saving address ` + error.message);
       }
 
+      const programToAddress = new ProgramToAddress();
       programToAddress.program = programEntity;
+      programToAddress.address = addressEntity;
 
       if (foundAddress) {
-        console.log(`Found ` + JSON.stringify(foundAddress).substring(0, 80));
+        // console.log(`Found ` + JSON.stringify(foundAddress).substring(0, 80));
         programToAddress.address = foundAddress; // NOTE: If found, uses existing keyword from mapping table.
       }
 
-      const foundAssociation = await programToAddressRepo.findOne({ where: { program: programEntity, address: addressEntity }}); 
+      // TODO: these found associations could also be wrapped with a try catch block
+      const foundAssociation = await programToAddressRepo.findOne({ where: { program: programEntity, address: addressEntity } }); 
 
       if (foundAssociation) {
         console.log(`Already exists. Association of ${programEntity.programId} and ${foundAddress?.addressId}`);
@@ -309,12 +298,11 @@ async function scrape(projectId: number, browser: Browser) {
       }
 
       try {
-        await programToAddressRepo.save(programToAddress); 
+        await programToAddressRepo.save(programToAddress);
       } catch (error: any) {
         console.log(`Error on associating (saving): ${error.message}`);
       }
     }
-
 
     // TODO: asynchronous open and close all member modals 
 
@@ -359,31 +347,89 @@ async function scrape(projectId: number, browser: Browser) {
 
       console.log('-'.repeat(100)); // NOTE: Division for better visual debugging.
 
-      let members: MemberModel[] | null = await getMemberFromModal(page);
-      for (const m of members ?? []) {
-        // TODO: save each member entity
-        // TODO: program to member assoc_program_member(memberId, programId)
+      // TODO: section of member persistence
+
+      let members: MemberDto[] = await getMemberFromModal(page);
+
+      for (const member of members) {
+
+        const memberEntity: MemberEntity = { };
+        memberEntity.name = member.name;
+        memberEntity.matricula = member.matricula;
+        memberEntity.vinculo = member.vinculo;
+        memberEntity.vinculoStatus = member.vinculoStatus;
+        memberEntity.email = member.email;
+        memberEntity.imageSource = member.imageSource;
+        memberEntity.lotacaoExercicio = member.lotacaoExercicio;
+        memberEntity.lotacaoOficial = member.lotacaoOficial;
+        memberEntity.curso = member.curso;
+
+        let foundMember: MemberEntity | null = null;
+
+        try {
+          foundMember = await memberRepo.findOne({ where: { matricula: memberEntity.matricula ?? undefined }});
+        } catch (error: any) {
+          console.log(error);
+        }
+
+        try {
+          if (foundMember === null) {
+            console.log(`INFO: didn't exist (member)`);
+            foundMember = await memberRepo.save(memberEntity); // NOTE: not found, then save to database
+          }
+        } catch (error: any) {        
+          console.log(`FAIL: saving member ` + error.message);
+        }
+
+        const programToMember = new ProgramToMember();
+        programToMember.program = programEntity;
+        programToMember.member = memberEntity;
+        
+        // TODO: relational data on program to member
+        programToMember.memberRole = member.memberRole;
+        programToMember.cargaHoraria = member.cargaHoraria;
+        programToMember.periodo = member.periodo;
+        programToMember.recebeBolsa = member.recebeBolsa;
+        programToMember.bolsa = member.bolsa;
+        programToMember.valor = member.valor;
+
+        console.log(`Verify: ` + JSON.stringify(programToMember));
+
+        if (foundMember) {
+          // console.log(`Found ` + JSON.stringify(foundAddress).substring(0, 80));
+          programToMember.member = foundMember; // NOTE: If found, uses existing keyword from mapping table.
+        }
+
+        // TODO: these found associations could also be wrapped with a try catch block
+        const foundAssociation = await programToMemberRepo.findOne({ where: { program: programEntity, member: memberEntity } }); 
+        // console.log(foundAssociation);
+
+        if (foundAssociation) {
+          console.log(`Already exists. Association of ${programEntity.programId} and ${memberEntity?.memberId}`);
+          continue; // NOTE: found association (already exists). Go to next address.
+        }
+
+        try {
+          await programToMemberRepo.save(programToMember);
+        } catch (error: any) {
+          console.log(`Error on associating (saving): ${error.message}`);
+        }
       }
 
       // console.log(members);
 
       // NOTE: break or pass to next page of members
+      const nextNotFound: boolean  = (nextTabsLink == null); // NOTE: single tab case
+      const nextIsTheEnd: boolean | ElementHandle<Element> = (tabPointer > 1 && linkDisabled); // NOTE: multi tab case  
 
-      // NOTE: got just one tab. Break to the next. (nextNotFound)
-      if (nextTabsLink == null) {
-        // warn('"Just one tab, break to the next URL"'); IMPORTANT
+      if (nextNotFound || nextIsTheEnd) {
+        // warn('"Break to the next URL"'); // NOTE: debugging
         break;
       }
 
-      // NOTE: no more tabs. Break to the next; (currentIsLast)
-      if (tabPointer > 1 && linkDisabled) {
-        // warn('"Break to the next URL"'); IMPORTANT
-        break;
-      }
-
-      // NOTE: Found more Tabs. Iterate! (goToNextTab)
+      // NOTE: Go to next tab
       if (nextTabsLink && tabPointer >= 1 && nextTabsLink) {
-        // note('"Has next tab"'); IMPORTANT
+        // note('"Has next tab"'); // NOTE: debugging
         await page.evaluate((element: any) => element.click(), nextTabsLink); // Use await here
         tabPointer++;
       }
@@ -405,7 +451,7 @@ function getCampusFromCity(city: string | null | undefined): (string | null) {
     case 'Palmeira das Missões':
       return 'Campus de Palmeira das Missões';
     case 'Cachoeira do Sul':
-      return 'Campus de Cachoeira do Sul';            
+      return 'Campus de Cachoeira do Sul';
     default:
       break;
   }
@@ -419,34 +465,15 @@ function getKey(string: string): string {
   return value;
 };
 
-function programToEntity(program: Program): ProgramEntity {
-  const entity = new ProgramEntity();
-  entity.programId = program.programId;
-  entity.imageSource = program.imageSource ?? null;
-  entity.domainImageSource = program.domainImageSource;
-  entity.title = program.title;
-  entity.numberUnique = program.numberUnique ?? '';
-  entity.classification = program.classification;
-  entity.summary = program.summary ?? null;
-  entity.objectives = program.objectives ?? null;
-  entity.defense = program.defense ?? null;
-  entity.results = program.results ?? null;
-  entity.dateStart = program.dateStart ?? null;
-  entity.dateFinal = program.dateFinal ?? null;
-  entity.status = program.status;
-  entity.hyperlink = program.hyperlink;
-  return entity;
-}
-
-async function getMemberFromModal(page: Page): Promise<MemberModel[] | null> {
+async function getMemberFromModal(page: Page): Promise<MemberDto[]> {
 
   // await page.waitForSelector('.modaljs-scroll-overlay');
   const deadModals: ElementHandle<Element>[] = await page.$$('.modaljs-scroll-overlay');
-  const members: MemberModel[] = [];
+  const members: MemberDto[] = [];
 
   for (const modal of deadModals) {
 
-    let member: MemberModel = {
+    let member: MemberDto = {
       memberId: null,
       name: null,
       matricula: null,
@@ -528,46 +555,25 @@ async function getMemberFromModal(page: Page): Promise<MemberModel[] | null> {
           break;
       }
 
-      if (paragraphs.indexOf(p) > 0) {
-        // TODO: add to set
-        memberAttributesInspector.add(getKey(text));
+      // TODO: debugging
+      // if (paragraphs.indexOf(p) > 0) {
+      //   // TODO: add to set
+      //   memberAttributesInspector.add(getKey(text));
 
-        // NOTE: inspect keys and values
-        // console.log(`index: ${paragraphs.indexOf(p)} key: ${key}, val: ${value}`);
+      //   // NOTE: inspect keys and values
+      //   // console.log(`index: ${paragraphs.indexOf(p)} key: ${key}, val: ${value}`);
 
-        if (key === 'Função no projeto') {
-          memberAcademicRole.add(value);
-        }
-      }
+      //   if (key === 'Função no projeto') {
+      //     memberAcademicRole.add(value);
+      //   }
+      // }
     }
 
-    // TODO: save member
-    // TODO: save program member associative table
-
-    // const matricula = await modal.$eval('div.modaljs-scroll-overlay p:nth-child(2)', strong => strong.innerText); // TODO: implement getVal
-    // const vinculo = await modal.$eval('div.modaljs-scroll-overlay p:nth-child(3)', strong => strong.innerText);
-    // const situacao = await modal.$eval('div.modaljs-scroll-overlay p:nth-child(4)', strong => strong.innerText); // MAKE IT HERE  
-    // const email = await modal.$eval('div.modaljs-scroll-overlay p:nth-child(5)', strong => strong.innerText); // MAKE IT HERE  
-    // const curso = await modal.$eval('div.modaljs-scroll-overlay p:nth-child(6)', strong => strong.innerText); // MAKE IT HERE  
-    // const funcao = await modal.$eval('div.modaljs-scroll-overlay p:nth-child(7)', strong => strong.innerText); // MAKE IT HERE 
-    // const cargaHoraria = await modal.$eval('div.modaljs-scroll-overlay p:nth-child(8)', strong => strong.innerText); // MAKE IT HERE 
-    // const periodo = await modal.$eval('div.modaljs-scroll-overlay p:nth-child(9)', strong => strong.innerText); // MAKE IT HERE  
-    // const recebeBolsa = await modal.$eval('div.modaljs-scroll-overlay p:nth-child(10)', strong => strong.innerText); // MAKE IT HERE 
-
-    // const data = { name, matricula , vinculo , situacao , email , curso , funcao , cargaHoraria, periodo, recebeBolsa };
-    // data.matricula = getVal(data.matricula);
-    // data.vinculo = getVal(data.vinculo);
-    // console.log(data);
-
+    // TODO: debugging
     // console.log(member); // NOTE: maintain
-    // get the saved program 
-    // save association with each
 
     members.push(member);
-    // return member;
   }
-
-  // console.log(members);
 
   return members;
 }
@@ -588,16 +594,17 @@ enum MemberDetails {
   Valor = 'Valor'
 }
 
+// TODO: main function starts the program
+
 main().then(
   (onSuccess: any) => {
-    // TODO: Some task on success
+    console.log(onSuccess);
   },
   (onFailure: any) => {
-    // TODO: Some task on failure
+    console.log(onFailure);
   }
 ).catch((error: unknown) => { 
-  // Handle error here
-  console.log(error); 
+  console.log(error); // TODO: Handle error here
 }).finally(() => {
-  console.log(`Finally block executed`)
+  console.log(`Finally block executed`); 
 });
