@@ -134,10 +134,10 @@ async function scrape(projectId: number, browser: Browser) {
         programEntity = foundProgram;
         console.log(`Id: ` + foundProgram.programId);
         programEntity.programId = foundProgram.programId; // NOTE: required for the association
+        console.log(`Old. Program ${programEntity.programId} already exists.`);
       }
 
       if (foundProgram === null) {
-        console.log(`Old. Program ${programEntity.programId} already exists.`);
         await programRepo.save(programEntity); // TODO: If not found, save program
       }
 
@@ -377,7 +377,7 @@ async function scrape(projectId: number, browser: Browser) {
 
         try {
           if (foundMember === null) {
-            console.log(`INFO: didn't exist (member)`);
+            // console.log(`INFO: didn't exist (member ${member.name})`);
             foundMember = await memberRepo.save(memberEntity); // NOTE: not found, then save to database
           }
         } catch (error: any) {        
@@ -417,11 +417,9 @@ async function scrape(projectId: number, browser: Browser) {
         } catch (error: any) {
           console.log(`Error on associating (saving): ${error.message}`);
         }
-
-        console.log(JSON.stringify(member.name));
       }
 
-      // console.log(members);
+      console.log(`Members: ` + JSON.stringify(members));
 
       // NOTE: break or pass to next page of members
       const nextNotFound: boolean  = (nextTabsLink == null); // NOTE: single tab case
@@ -495,7 +493,7 @@ async function getMemberFromModal(page: Page): Promise<MemberDto[]> {
     try {
       const base64Image: string = await modal.$eval('div.modaljs-scroll-overlay .span3 img', (image: any) => image.src);
       member.imageSource = base64Image; // NOTE: temporarely
-      console.log(base64Image.substring(0, 99));
+      // console.log(base64Image.substring(0, 99));
     } catch (error: unknown) {
       member.imageSource = null; // NOTE: It's an icon tag
     }
