@@ -13,7 +13,7 @@ export class MemberEntity {
   matricula?: string | null;
 
   @Column({ nullable: true, type: 'varchar' })
-  vinculo?: AcademicRole | null;
+  vinculo?: AcademicRole | string | null;
 
   @Column({ nullable: true, type: 'varchar' })
   vinculoStatus?: string | null;

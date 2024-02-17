@@ -18,7 +18,7 @@ export class ProgramToMember {
   member?: MemberEntity;
 
   @Column({ nullable: true, type: 'varchar' })
-  memberRole?: MemberRole | null; // NOTE: to go
+  memberRole?: MemberRole | string | null; // NOTE: to go
 
   @Column({ nullable: true, type: 'varchar' })
   cargaHoraria?: string | null; // NOTE: to go

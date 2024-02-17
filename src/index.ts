@@ -30,8 +30,8 @@ async function main(): Promise<void> {
 
   await databaseConnection();
 
-  const browser = await launch({ headless: false });
-  for (let projectId = 73572; projectId >= 0; projectId--) { // 74584 top 74451 test, 
+  const browser = await launch({ headless: true });
+  for (let projectId = 74584; projectId >= 0; projectId--) { // 74584 top 
     await scrape(projectId, browser);
   }
 
@@ -136,12 +136,12 @@ async function scrape(projectId: number, browser: Browser) {
       }
 
       if (foundProgram === null) {
+        console.log(`Old. Program ${programEntity.programId} already exists.`);
         await programRepo.save(programEntity); // TODO: If not found, save program
       }
 
     } catch (error: any) {
-      console.log('Entity (Program) error');
-      handleError(error);
+      console.log(`Error on (Program): ${error.message}`);
     }
 
     // NOTE: reduced attributs output for better visualization
@@ -203,7 +203,7 @@ async function scrape(projectId: number, browser: Browser) {
       const foundAssociation = await programToKeywordRepo.findOne({ where: { program: programEntity, keyword: keywordEntity } });
 
       if (foundAssociation) {
-        // console.log(`Already exists. Association of ${program.programId} and ${keywordEntity.keywordId}`);
+        console.log(`Old. Association of program ${programEntity.programId} and keyword ${foundKeyword?.keywordId} already exists.`);
         continue; // TODO: Alredy exists. Goes to next iteration.
       }
 
@@ -216,6 +216,7 @@ async function scrape(projectId: number, browser: Browser) {
 
     // TODO: keywords of programs
     const keys = `${' '.repeat(6)}╰─── ${JSON.stringify([...keywords])}`;
+    console.log(`Keywords: `)
     console.log(keys);
 
     // TODO: address of programs
@@ -234,15 +235,15 @@ async function scrape(projectId: number, browser: Browser) {
     for (let i = 0; datas === null || i < datas.length; i++) {
 
       if (datas === null) {
-        console.log(`Cidades: `)
+        console.log(`Regions: `)
         console.log(`${' '.repeat(6)}╰───`, ['Not informed']);
         break;
       }
 
       // NOTE: The third column contains the addresses 
       if (datas.indexOf(datas[i]) >= 3) {
-        console.log(`Cidades: `);
-        console.log(`${' '.repeat(6)}╰───`, datas[i].split('\t'));
+        console.log(`Regions: `);
+        console.log(`${' '.repeat(6)}╰───`, JSON.stringify(datas[i].split('\t')));
         const addressesSplitted: string[] = datas[i].split('\t');
         cities.push(addressesSplitted[0]); // NOTE: collect cities 
         states.push(addressesSplitted[1]); // NOTE: collect states
@@ -256,7 +257,7 @@ async function scrape(projectId: number, browser: Browser) {
       const addressEntity: AddressEntity = { };
 
       if (cities.length === 0) {
-        console.log(`None to save: ${cities.length}`);
+        // console.log(`None to save: ${cities.length}`);
         break;
       }
 
@@ -294,7 +295,7 @@ async function scrape(projectId: number, browser: Browser) {
       const foundAssociation = await programToAddressRepo.findOne({ where: { program: programEntity, address: addressEntity } }); 
 
       if (foundAssociation) {
-        console.log(`Already exists. Association of ${programEntity.programId} and ${foundAddress?.addressId}`);
+        console.log(`Old. Association of program ${programEntity.programId} and address ${foundAddress?.addressId} already exists.`);
         continue; // NOTE: found association (already exists). Go to next address.
       }
 
@@ -394,7 +395,7 @@ async function scrape(projectId: number, browser: Browser) {
         programToMember.bolsa = member.bolsa;
         programToMember.valor = member.valor;
 
-        console.log(`Verify: ` + JSON.stringify(programToMember));
+        // console.log(`Verify: ` + JSON.stringify(programToMember)); TODO: debugging
 
         if (foundMember) {
           // console.log(`Found ` + JSON.stringify(foundAddress).substring(0, 80));
@@ -406,7 +407,7 @@ async function scrape(projectId: number, browser: Browser) {
         // console.log(foundAssociation);
 
         if (foundAssociation) {
-          console.log(`Already exists. Association of ${programEntity.programId} and ${memberEntity?.memberId}`);
+          console.log(`Already exists. Association of program ${programEntity.programId} and member ${foundMember?.memberId}`);
           continue; // NOTE: found association (already exists). Go to next address.
         }
 
@@ -415,6 +416,8 @@ async function scrape(projectId: number, browser: Browser) {
         } catch (error: any) {
           console.log(`Error on associating (saving): ${error.message}`);
         }
+
+        console.log(JSON.stringify(member.name));
       }
 
       // console.log(members);
@@ -460,15 +463,8 @@ function getCampusFromCity(city: string | null | undefined): (string | null) {
   return null;
 }
 
-function getKey(string: string): string {
-  const parts = string.split(':');
-  const value = parts[0].trim();
-  return value;
-};
-
 async function getMemberFromModal(page: Page): Promise<MemberDto[]> {
 
-  // await page.waitForSelector('.modaljs-scroll-overlay');
   const deadModals: ElementHandle<Element>[] = await page.$$('.modaljs-scroll-overlay');
   const members: MemberDto[] = [];
 
@@ -497,7 +493,8 @@ async function getMemberFromModal(page: Page): Promise<MemberDto[]> {
 
     try {
       const base64Image: string = await modal.$eval('div.modaljs-scroll-overlay .span3 img', (image: any) => image.src);
-      member.imageSource = base64Image.substring(0, 80); // NOTE: temporarely
+      member.imageSource = base64Image; // NOTE: temporarely
+      console.log(base64Image.substring(0, 99));
     } catch (error: unknown) {
       member.imageSource = null; // NOTE: It's an icon tag
     }
@@ -505,10 +502,10 @@ async function getMemberFromModal(page: Page): Promise<MemberDto[]> {
     for (const p of paragraphs) {
 
       const text: string = await p.evaluate((el: any) => el.innerText);
-      let [key, value]: any = text.split(':');
+      let [key, value]: string[] = text.split(':');
 
       if (value) {
-        value = value.substring(1, value.lenght); // TODO: Ignore the first character at postiion '0'
+        value = value.substring(1, value.length); // TODO: Ignore the first character at postiion '0'
       }
 
       switch (key) {

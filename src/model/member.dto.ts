@@ -35,13 +35,13 @@ export interface MemberDto {
   memberId: number | null; // member
   name: string | null; // member
   matricula: string | null; // // member unique
-  vinculo: AcademicRole | null; // member role
+  vinculo: AcademicRole | string | null; // member role
   vinculoStatus: string | null; // member
   email: string | null; // member unique 
   imageSource: string | null;
   lotacaoExercicio: string | null;
   lotacaoOficial: string | null;
-  memberRole: MemberRole | null; // role
+  memberRole: MemberRole | string | null; // role
   cargaHoraria: string | null;
   periodo: string | null;
   recebeBolsa: string | null;
