@@ -118,6 +118,7 @@ async function scrape(projectId: number, browser: Browser) {
     programEntity.title = title;
     programEntity.hyperlink = projectUrl;
     programEntity.numberUnique = numberUnique;
+    programEntity.classification = classification;
     programEntity.summary = summary;
     programEntity.objectives = objectives;
     programEntity.defense = defense;
