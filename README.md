@@ -41,6 +41,7 @@ Puppeteer is a Node.js library for browser automation via the DevTools Protocol,
 - [x] `to do`: member images are optional
 - [x] `to do`: program addresses are optional
 - [x] `to do`: classes to entities 
+- [x] `to do`: refactor everything from javascript to typescript 
 - [x] `to do`: save to database
 - [x] `to do`: verify for persisted data before saving, in order to avoid duplicates.
 
