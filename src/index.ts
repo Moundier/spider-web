@@ -419,7 +419,7 @@ async function scrape(projectId: number, browser: Browser) {
         }
       }
 
-      console.log(`Members: ` + JSON.stringify(members));
+      members.forEach((m) => console.log(JSON.stringify(m.name)));
 
       // NOTE: break or pass to next page of members
       const nextNotFound: boolean  = (nextTabsLink == null); // NOTE: single tab case
