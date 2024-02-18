@@ -2,7 +2,7 @@ import { Browser, ElementHandle, HTTPResponse, Page, launch } from 'puppeteer';
 import { now } from './utils/time';
 import { fail, done, warn } from './utils/todo'
 import { MemberDto } from './model/member.dto';
-import { DataSource, Repository } from 'typeorm';
+import { ConnectionIsNotSetError, ConnectionNotFoundError, DataSource, Repository } from 'typeorm';
 import { ProgramEntity } from './entity/program';
 import { MemberEntity } from './entity/member';
 import { KeywordEntity } from './entity/keyword';
@@ -20,8 +20,8 @@ async function databaseConnection(): Promise<void> {
   try {
     let source: DataSource = await datasource.initialize();
     if (datasource.isInitialized) console.log("DataSource: connected to database");
-  } catch (error: unknown) {
-    if (error instanceof Error) console.error("Stack trace:", error.stack);
+  } catch (error: any) {
+    if (error.code === 'ECONNREFUSED') fail(`(Error) postgresql: is postgres service running? Go verify.`);
     process.exit(1);
   }
 }
@@ -30,8 +30,8 @@ async function main(): Promise<void> {
 
   await databaseConnection();
 
-  const browser = await launch({ headless: true });
-  for (let projectId = 74584; projectId >= 0; projectId--) { // 74584 top 
+  const browser = await launch({ headless: false });
+  for (let projectId = 69360; projectId >= 0; projectId--) { // 74584 top 
     await scrape(projectId, browser);
   }
 
@@ -216,9 +216,9 @@ async function scrape(projectId: number, browser: Browser) {
     }
 
     // TODO: keywords of programs
-    const keys = `${' '.repeat(6)}╰─── ${JSON.stringify([...keywords])}`;
-    console.log(`Keywords: `)
-    console.log(keys);
+    // const keys = `${' '.repeat(6)}╰─── ${JSON.stringify([...keywords])}`;
+    // console.log(`Keywords: `)
+    // console.log(keys);
 
     // TODO: address of programs
     let addressElement = await page.$$eval('div.panel-title', (element: any) => element[5].innerText);
@@ -236,15 +236,15 @@ async function scrape(projectId: number, browser: Browser) {
     for (let i = 0; datas === null || i < datas.length; i++) {
 
       if (datas === null) {
-        console.log(`Regions: `)
-        console.log(`${' '.repeat(6)}╰───`, ['Not informed']);
+        // console.log(`Regions: `);
+        // console.log(`${' '.repeat(6)}╰───`, ['Not informed']);
         break;
       }
 
       // NOTE: The third column contains the addresses 
       if (datas.indexOf(datas[i]) >= 3) {
-        console.log(`Regions: `);
-        console.log(`${' '.repeat(6)}╰───`, JSON.stringify(datas[i].split('\t')));
+        // console.log(`Regions: `);
+        // console.log(`${' '.repeat(6)}╰───`, JSON.stringify(datas[i].split('\t')));
         const addressesSplitted: string[] = datas[i].split('\t');
         cities.push(addressesSplitted[0]); // NOTE: collect cities 
         states.push(addressesSplitted[1]); // NOTE: collect states
@@ -255,10 +255,10 @@ async function scrape(projectId: number, browser: Browser) {
 
     for (let i = 0; (cities.length === 0) || (i < cities.length); ++i) {
 
-      const addressEntity: AddressEntity = { };
+      let addressEntity: AddressEntity = { };
 
       if (cities.length === 0) {
-        // console.log(`None to save: ${cities.length}`);
+        // console.log(`Found ${cities.length} addresses. Next step.`);
         break;
       }
 
@@ -277,7 +277,7 @@ async function scrape(projectId: number, browser: Browser) {
       try {
         if (foundAddress === null) {
           console.log(`INFO: didn't exist (address)`);
-          foundAddress = await addressRepo.save(addressEntity); // NOTE: not found, then save to database
+          await addressRepo.save(addressEntity); // NOTE: not found, then save to database
         }
       } catch (error: any) {        
         console.log(`FAIL: saving address ` + error.message);
@@ -287,7 +287,7 @@ async function scrape(projectId: number, browser: Browser) {
       programToAddress.program = programEntity;
       programToAddress.address = addressEntity;
 
-      if (foundAddress) {
+      if (foundAddress !== null) {
         // console.log(`Found ` + JSON.stringify(foundAddress).substring(0, 80));
         programToAddress.address = foundAddress; // NOTE: If found, uses existing keyword from mapping table.
       }
@@ -320,7 +320,7 @@ async function scrape(projectId: number, browser: Browser) {
       for (const button of detalhesButtons) {
 
         await setTimeout(500); // NOTE: timeout is required for asynchronous modal opening
-        // console.log(`"Button ${detalhesButtons.indexOf(button)}"`); IMPORTANT
+        console.log(`"Button ${detalhesButtons.indexOf(button)}"`); // NOTE: debugging
 
         try {
           await button.click(); /// TODO: open the modal
@@ -344,21 +344,15 @@ async function scrape(projectId: number, browser: Browser) {
         }
       }
 
-      const nextTabsLink: ElementHandle<Element> | null = await page.$('li a[title="Próxima página"]');
-      const disabledBtns: ElementHandle<Element>[] | null = await page.$$('.disabled');
-      const linkDisabled: ElementHandle<Element> = disabledBtns[2]; // NOTE: Obtain third inactive skip button. (0, 1, 2)
-
-      console.log('-'.repeat(100)); // NOTE: Division for better visual debugging.
-
-      // TODO: section of member persistence
+      // TODO: section of member persistence (after all buttons were clicked)
 
       let members: MemberDto[] = await getMemberFromModal(page);
 
       for (const member of members) {
 
-        const memberEntity: MemberEntity = { };
+        let memberEntity: MemberEntity = { };
         memberEntity.name = member.name;
-        memberEntity.matricula = member.matricula;
+        memberEntity.matricula = member?.matricula;
         memberEntity.vinculo = member.vinculo;
         memberEntity.vinculoStatus = member.vinculoStatus;
         memberEntity.email = member.email;
@@ -367,23 +361,28 @@ async function scrape(projectId: number, browser: Browser) {
         memberEntity.lotacaoOficial = member.lotacaoOficial;
         memberEntity.curso = member.curso;
 
-        let foundMember: MemberEntity | null = null;
+        let foundMember: any;
 
         try {
-          foundMember = await memberRepo.findOne({ where: { matricula: memberEntity.matricula ?? undefined }});
+          foundMember = await memberRepo.findOne({ where: { matricula: memberEntity.matricula ?? undefined }}) ;
         } catch (error: any) {
           console.log(error);
         }
 
+        // NOTE: must be here for debugging 
+        console.log(`${members.indexOf(member) + 1} ${JSON.stringify(member.name)} ${member.memberRole}`);
+
         try {
           if (foundMember === null) {
-            // console.log(`INFO: didn't exist (member ${member.name})`);
-            foundMember = await memberRepo.save(memberEntity); // NOTE: not found, then save to database
+            memberEntity = await memberRepo.save(memberEntity); // NOTE: not found, then save to database
+            console.log(`""Saved (Member): ` + JSON.stringify(memberEntity).substring(0, 80));
           }
         } catch (error: any) {        
-          console.log(`FAIL: saving member ` + error.message);
+          // ERROR HERE
+          console.log(`""(Error): saving member ::: ${error}${'\n(Error message): '}` + error.message);
         }
 
+        // TODO: build relation after found association
         const programToMember = new ProgramToMember();
         programToMember.program = programEntity;
         programToMember.member = memberEntity;
@@ -396,43 +395,63 @@ async function scrape(projectId: number, browser: Browser) {
         programToMember.bolsa = member.bolsa;
         programToMember.valor = member.valor;
 
-        // console.log(`Verify: ` + JSON.stringify(programToMember)); TODO: debugging
 
-        if (foundMember) {
+        if (foundMember !== null) {
           // console.log(`Found ` + JSON.stringify(foundAddress).substring(0, 80));
+          memberEntity = foundMember;
           programToMember.member = foundMember; // NOTE: If found, uses existing keyword from mapping table.
         }
 
         // TODO: these found associations could also be wrapped with a try catch block
-        const foundAssociation = await programToMemberRepo.findOne({ where: { program: programEntity, member: memberEntity } }); 
-        // console.log(foundAssociation);
 
-        if (foundAssociation) {
-          console.log(`Already exists. Association of program ${programEntity.programId} and member ${foundMember?.memberId}`);
-          continue; // NOTE: found association (already exists). Go to next address.
+        const foundAssociation = await programToMemberRepo.findOne({ where: { program: programEntity, member: memberEntity, memberRole: member.memberRole ?? undefined } }); 
+        // console.log(`Verify: ` + JSON.stringify(programToMember)); // TODO: debugging
+        console.log(`Has association ${foundAssociation?.member?.memberId}`);
+
+        if (foundMember) {
+          // console.log(`""Found (Member): ` + JSON.stringify(foundMember).substring(0, 80));
+          programToMember.member = foundMember; // NOTE: If found, uses existing keyword from mapping table.
         }
 
         try {
-          await programToMemberRepo.save(programToMember);
+          if (foundAssociation === null) {
+            // console.log(`""(Saved) association of program ${programEntity.programId} and member ${foundMember?.memberId} created.`)
+            await programToMemberRepo.save(programToMember);
+          } else {
+            console.log(`""Already exists. Association of program ${programEntity.programId} and member ${foundMember?.memberId}`);
+          }
         } catch (error: any) {
-          console.log(`Error on associating (saving): ${error.message}`);
+          // ERROR HERE
+          console.log(`""(Error) associating member ::: ${error}${'\n(Error message): '}` + error.message);
         }
+
       }
 
-      members.forEach((m) => console.log(JSON.stringify(m.name)));
+      
+      // TODO: 
+      const nextTabsLink: ElementHandle<Element> | null = await page.$('li a[title="Próxima página"]');
 
       // NOTE: break or pass to next page of members
-      const nextNotFound: boolean  = (nextTabsLink == null); // NOTE: single tab case
-      const nextIsTheEnd: boolean | ElementHandle<Element> = (tabPointer > 1 && linkDisabled); // NOTE: multi tab case  
+      // const nextNotFound: boolean  = ; // NOTE: single tab case
+      // const nextIsTheEnd: boolean | ElementHandle<Element> = ; // NOTE: multi tab case  
 
-      if (nextNotFound || nextIsTheEnd) {
-        // warn('"Break to the next URL"'); // NOTE: debugging
+      if (nextTabsLink == null) {        
+        warn('" NULL Break to the next URL"'); // NOTE: debugging
+        console.log('-'.repeat(100)); // NOTE: Division for better visual debugging.
         break;
       }
+      
+      // // NOTE: has third disabled button. Has  
+      // if (tabPointer > 1 && nextTabsLink) {
+      //   warn('"MORE Break to the next URL"'); // NOTE: debugging
+      //   console.log('-'.repeat(100)); // NOTE: Division for better visual debugging.
+      //   await page.evaluate((element: any) => element.click(), nextTabsLink); // Use await here
+      //   tabPointer++;
+      // }
 
       // NOTE: Go to next tab
       if (nextTabsLink && tabPointer >= 1 && nextTabsLink) {
-        // note('"Has next tab"'); // NOTE: debugging
+        warn(`"Has next tab" ${tabPointer}`); // NOTE: debugging
         await page.evaluate((element: any) => element.click(), nextTabsLink); // Use await here
         tabPointer++;
       }
@@ -593,15 +612,6 @@ enum MemberDetails {
 
 // TODO: main function starts the program
 
-main().then(
-  (onSuccess: any) => {
-    console.log(onSuccess);
-  },
-  (onFailure: any) => {
-    console.log(onFailure);
-  }
-).catch((error: unknown) => { 
+main().catch((error: unknown) => { 
   console.log(error); // TODO: Handle error here
-}).finally(() => {
-  console.log(`Finally block executed`); 
 });
