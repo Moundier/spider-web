@@ -12,7 +12,7 @@ Puppeteer is a Node.js library for browser automation via the DevTools Protocol,
 ## Requirements
 - `node`
 - `pg` (Can be removed)
-- `typeorm`: not only boilerplate (lombok), but also database persistence object relational mapper 
+- `typeorm`: lombok like boilerplater, and also a object relational mapper 
 - `tsx`: typescript for typing and annotations (experimental feature)
 - `nodemon`: used for hot reloading
 - `express`: restful
@@ -52,18 +52,6 @@ Puppeteer is a Node.js library for browser automation via the DevTools Protocol,
 - Interactions System
 - Achievements System (Interactions, Time-use, Personal-profile)
 
-### Note
-- Sometimes there are 'regions' in 'keyword' 
-- https://portal.ufsm.br/projetos/publico/projetos/view.html?idProjeto=74498 
-- https://portal.ufsm.br/projetos/publico/projetos/view.html?idProjeto=74291
-- https://portal.ufsm.br/projetos/publico/projetos/view.html?idProjeto=74185
-- https://portal.ufsm.br/projetos/publico/projetos/view.html?idProjeto=74184
-- https://portal.ufsm.br/projetos/publico/projetos/view.html?idProjeto=74097
-- https://portal.ufsm.br/projetos/publico/projetos/view.html?idProjeto=74080
-- https://portal.ufsm.br/projetos/publico/projetos/view.html?idProjeto=73572
-- https://portal.ufsm.br/projetos/publico/projetos/view.html?idProjeto=74291
-- https://portal.ufsm.br/projetos/publico/projetos/view.html?idProjeto=74367
-
 ### Queries
 
 1. Delete table's lines
@@ -75,52 +63,50 @@ Puppeteer is a Node.js library for browser automation via the DevTools Protocol,
 -- delete from program_member;
 -- delete from program_address;
 -- delete from program_keyword;
-```
 
-2. Selection on tables
-```sql
+-- SELECTION ON TABLES
 select * from program;
 select * from keyword;
 select * from address;
 select * from member;
-
 select * from program_keyword;
 select * from program_address;
 select * from program_member;
-```
 
-3. Get all keywords linked to project id
-```sql
+-- FETCH KEYWORDS OF PROJECT
 select "keywordName" from program, keyword, program_keyword
 where program."programId" = program_keyword."programId"
 and keyword."keywordId" = program_keyword."keywordId"
 and program."programId" = 'id';
-```
 
-4. Get all addresses linked to project id
-```sql
+-- FETCH ADDRESSES OF PROJECT
 select "city" from program, address, program_address
 where program."programId" = program_address."programId"
 and address."addressId" = program_address."addressId"
 and program."programId" = 'id';
-```
 
-5. Get all members linked to project id
-```sql
+-- FETCH MEMBERS OF PROJECT
 select "name" from program, member, program_member
 where program."programId" = program_member."programId"
 and member."memberId" = program_member."memberId"
 and program."programId" = 'id';
+
+-- SOLVING PROBLEMS
+select "hyperlink" from program where program."programId" = 8673;
+select * from program where program."hyperlink" = 'https://portal.ufsm.br/projetos/publico/projetos/view.html?idProjeto=62591';
+select * from program;
+select * from member;
+select count("programId") from program;
+select count("memberId") from member;
+-- 
 ```
 
-6. Drop all sequences
+### Notes
+1. Sometimes members repeat, unreasonably
+- In "https://portal.ufsm.br/projetos/publico/projetos/view.html?idProjeto=74535" the username and membeRole repeats for "ANTHONIO GABRIEL SARAIVA DOS SANTOS" 
+- Since there are members with the same 'name' and 'membeRole', it cant repeat in database
+- This is not our error, but of the portal admin.
 
-```sql
-DROP SEQUENCE address_addressId_seq;
-DROP SEQUENCE keyword_keywordId_seq; 
-DROP SEQUENCE member_memberId_seq;
-DROP SEQUENCE program_address_id_seq;
-DROP SEQUENCE program_keyword_id_seq;
-DROP SEQUENCE program_member_id_seq;
-DROP SEQUENCE program_programId_seq;
-```
+2. Sometimes there are 'regions' in 'keyword' (We cant do much about it)
+- (Campus) https://portal.ufsm.br/projetos/publico/projetos/view.html?idProjeto=74097
+- (Wow) https://portal.ufsm.br/projetos/publico/projetos/view.html?idProjeto=74080
