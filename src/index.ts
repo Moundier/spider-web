@@ -395,14 +395,11 @@ async function scrape(projectId: number, browser: Browser) {
         programToMember.bolsa = member.bolsa;
         programToMember.valor = member.valor;
 
-
         if (foundMember !== null) {
           // console.log(`Found ` + JSON.stringify(foundAddress).substring(0, 80));
           memberEntity = foundMember;
           programToMember.member = foundMember; // NOTE: If found, uses existing keyword from mapping table.
         }
-
-        // TODO: these found associations could also be wrapped with a try catch block
 
         const foundAssociation = await programToMemberRepo.findOne({ where: { program: programEntity, member: memberEntity, memberRole: member.memberRole ?? undefined } }); 
         // console.log(`Verify: ` + JSON.stringify(programToMember)); // TODO: debugging
@@ -430,24 +427,12 @@ async function scrape(projectId: number, browser: Browser) {
       // TODO: jump to next tab of members
       const nextTabsLink: ElementHandle<Element> | null = await page.$('li a[title="Próxima página"]');
 
-      // NOTE: break or pass to next page of members
-      // const nextNotFound: boolean  = ; // NOTE: single tab case
-      // const nextIsTheEnd: boolean | ElementHandle<Element> = ; // NOTE: multi tab case  
-
       if (nextTabsLink == null) {        
         warn('" NULL Break to the next URL"'); // NOTE: debugging
         console.log('-'.repeat(100)); // NOTE: Division for better visual debugging.
         break;
       }
       
-      // // NOTE: has third disabled button. Has  
-      // if (tabPointer > 1 && nextTabsLink) {
-      //   warn('"MORE Break to the next URL"'); // NOTE: debugging
-      //   console.log('-'.repeat(100)); // NOTE: Division for better visual debugging.
-      //   await page.evaluate((element: any) => element.click(), nextTabsLink); // Use await here
-      //   tabPointer++;
-      // }
-
       // NOTE: Go to next tab
       if (nextTabsLink && tabPointer >= 1 && nextTabsLink) {
         warn(`"Has next tab" ${tabPointer}`); // NOTE: debugging
