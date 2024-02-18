@@ -31,7 +31,7 @@ async function main(): Promise<void> {
   await databaseConnection();
 
   const browser = await launch({ headless: false });
-  for (let projectId = 69360; projectId >= 0; projectId--) { // 74584 top 
+  for (let projectId = 74584; projectId >= 0; projectId--) { // 74584 top 
     await scrape(projectId, browser);
   }
 
@@ -53,11 +53,11 @@ const programToMemberRepo: Repository<ProgramToMember> = datasource.getRepositor
 const programToKeywordRepo: Repository<ProgramToKeyword> = datasource.getRepository(ProgramToKeyword);
 const programToAddressRepo: Repository<ProgramToAddress> = datasource.getRepository(ProgramToAddress);
 
-let programPanelDataInspector: Set<string> = new Set(); // Dados Basicos, Inovacao e gesto financeira, Classificacoes, Participantes, Orgaos, Cidades de atuacao, Publico Alvo, Plano de Trabalho
-let programClassificInspector: Set<string> = new Set(); // ENSINO, PESQUISA, EXTENSAO, DESENVOLVIMENTO_INSTITUCIOAL,
-let programSituationInspector: Set<string> = new Set(); // SUSPENSO, CONCLUIDO_PUBLICADO, CANCELADO, EM_ANDAMENTO  
-let memberAttributesInspector: Set<string> = new Set(); // MATRÍCULA, VÍNCULO, SITUAÇÃO DO VÍNCULO, E-MAIL, LOTAÇÃO DE EXERCÍCIO, LOTAÇÃO OFICIAL, FUNÇÃO NO PROJETO, CARGA HORÁRIA, PERÍODO, RECEBE BOLSA PELO PROJETO, CURSO
-let memberAcademicRole: Set<string> = new Set(); //  Coordenador, Participante, Autor 
+let programPanelDataInspector: Set<string> = new Set();
+let programClassificInspector: Set<string> = new Set();
+let programSituationInspector: Set<string> = new Set();   
+let memberAttributesInspector: Set<string> = new Set();
+let memberAcademicRole: Set<string> = new Set(); 
 
 async function scrape(projectId: number, browser: Browser) {
   const page: Page = await browser.newPage();
@@ -426,9 +426,8 @@ async function scrape(projectId: number, browser: Browser) {
         }
 
       }
-
       
-      // TODO: 
+      // TODO: jump to next tab of members
       const nextTabsLink: ElementHandle<Element> | null = await page.$('li a[title="Próxima página"]');
 
       // NOTE: break or pass to next page of members
