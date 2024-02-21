@@ -31,7 +31,7 @@ async function main(): Promise<void> {
   await databaseConnection();
 
   const browser = await launch({ headless: false });
-  for (let projectId = 74584; projectId >= 0; projectId--) { // 74584 top 
+  for (let projectId = 66747; projectId >= 0; projectId--) { // 74584 top 74552 // 66747
     await scrape(projectId, browser);
   }
 

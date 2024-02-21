@@ -63,6 +63,7 @@ Puppeteer is a Node.js library for browser automation via the DevTools Protocol,
 -- delete from program_member;
 -- delete from program_address;
 -- delete from program_keyword;
+-- delete from program where program."hyperlink" = 'https://portal.ufsm.br/projetos/publico/projetos/view.html?idProjeto=74584';
 
 -- SELECTION ON TABLES
 select * from program;
@@ -91,6 +92,11 @@ where program."programId" = program_member."programId"
 and member."memberId" = program_member."memberId"
 and program."programId" = 'id';
 
+-- SUBQUERY FOR THE LATEST INSERTED
+SELECT *
+FROM program
+WHERE program."programId" = (SELECT MAX("programId") FROM program);
+
 -- SOLVING PROBLEMS
 select "hyperlink" from program where program."programId" = 8673;
 select * from program where program."hyperlink" = 'https://portal.ufsm.br/projetos/publico/projetos/view.html?idProjeto=62591';
@@ -98,7 +104,6 @@ select * from program;
 select * from member;
 select count("programId") from program;
 select count("memberId") from member;
--- 
 ```
 
 ### Notes
